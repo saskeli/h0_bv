@@ -29,6 +29,37 @@ constexpr std::array<uint64_t, n + 1> binoms() {
     return ret;
 }
 
+template <uint16_t b, uint16_t k> 
+constexpr std::array<uint64_t, b / 2> bkf_stops() {
+    auto bins = binoms<b / 2>();
+
+    std::array<uint64_t, b / 2> ret;
+    const constexpr uint16_t start = k > b / 2 ? k - b / 2 + 1 : 1;
+    for (uint16_t i = 0; i < start; ++i) {
+        ret[i] = 0;
+    }
+    const constexpr uint16_t end = k > b / 2 ? b / 2 : k;
+    for (uint16_t i = start; i < end; ++i) {
+        ret[i] = ret[i - 1] + binoms[i - 1] * binoms[k - i + 1];
+    }
+    if constexpr (end < b / 2) {
+        ret[end] = ret[end - 1] + binoms[end - 1] * binoms[k - end + 1];
+        for (uint16_t i = end + 1; i < b/2; ++i) {
+            ret[i] = ret[i - 1];
+        }
+    }
+    return ret;
+}
+
+template <uint16_t b>
+constexpr std::array<std::array<uint64_t, b/2>, b> bf_stops() {
+    std::array<std::array<uint64_t, b/2>, b> ret;
+    for (uint16_t i = 0; i < b; ++i) {
+        ret[i] = bkf_stops<b, i>();
+    }
+    return ret;
+}
+
 constexpr uint32_t next(uint32_t v) {
     uint32_t off = __builtin_ctzl(v);
     uint32_t fix = __builtin_ctzl(~(v >> off)) - 1;
@@ -171,6 +202,13 @@ class mults {
                 //std::cerr << tot << std::endl;
             }
         }
+        uint16_t start = 0;
+        uint16_t end = b / 2;
+        while (start < end) {
+
+        }
+
+
         if constexpr (b == 64) {
             tot += fp * b32[ks];
         } else if constexpr (b == 32) {
