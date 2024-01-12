@@ -4,7 +4,11 @@
 #include <bitset>
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
+namespace h0 {
+namespace internal {
+    
 constexpr uint64_t gcd(uint64_t a, uint64_t b) {
     if (a != b) {
         if (a < b) {
@@ -134,9 +138,9 @@ class byte_mapping {
     static constexpr uint64_t get_f(uint8_t b) { return f_mapping[b]; }
 };
 
-template <uint16_t n, std::array<uint64_t, (n / 2) + 1> b32,
-          std::array<uint64_t, (n / 4) + 1> b16,
-          std::array<uint64_t, (n / 8) + 1> b8>
+template <uint16_t n = 64, std::array<uint64_t, (n / 2) + 1> b32 = binoms<32>(),
+          std::array<uint64_t, (n / 4) + 1> b16 = binoms<16>(),
+          std::array<uint64_t, (n / 8) + 1> b8 = binoms<8>()>
 class mults {
    private:
     template <uint16_t b>
@@ -339,42 +343,59 @@ class mults {
     }
 };
 
-int main() {
-    mults<64, binoms<32>(), binoms<16>(), binoms<8>()> m;
-    uint64_t inp;
-    char c;
-    /*for (uint64_t i = 1; i > 0; ++i) {
-        auto r = m.encode(i);
-        uint64_t v = m.decode(r.first, r.second);
-        if (i != v) {
-            std::cerr << i << " -> " << r.first << ", " << r.second << " -> " <<
-    v << std::endl; break;
+class v_ints {
+    private:
+    std::vector<uint64_t> data;
+    public:
+    void append(uint64_t v, uint64_t off, uint16_t w) {
+        if (off + w > data.size() * 64) {
+            data.push_back(0);
         }
-        if (i % 10000000 == 0) {
-            std::cerr << i << std::endl;
-        }
-    }*/
-    std::pair<uint16_t, uint64_t> enc = {0, 0};
-    while (true) {
-        std::cin >> c;
-        if (c == 'e') {
-            std::cin >> inp;
-            enc = m.encode(inp);
-            std::cout << enc.first << ", " << enc.second << std::endl;
-        } else if (c == 'd') {
-            std::cout << m.decode(enc.first, enc.second) << std::endl;
-        } else if (c == 'r') {
-            std::cin >> inp;
-            std::cout << m.rank(enc.first, enc.second, inp) << std::endl;
-        } else if (c == 's') {
-            std::cin >> inp;
-            std::cout << m.select(enc.first, enc.second, inp) << std::endl;
-        } else if (c == 'a') {
-            std::cin >> inp;
-            std::cout << m.access(enc.first, enc.second, inp) << std::endl;
-        } else {
-            break;
+        uint64_t mod = off % 64;
+        uint64_t div = off / 64;
+        data[div] |= v << mod;
+        if (mod + w > 64) {
+            data[div + 1] = v >> ((mod + 2) % 64);
         }
     }
-    return 0;
-}
+
+    uint64_t read(uint64_t off, uint16_t w) {
+        uint64_t mod = off % 64;
+        uint64_t div = off / 64;
+        uint64_t val = data[div] >> mod;
+        if (mod + w > 64) {
+            // TODO: finish this sh... shtuff.
+        }
+        return val;
+    }
+};
+
+} // namespace internal
+
+class h0_bv {
+    private:
+    static const internal::mults<> coder;
+    std::vector<std::pair<uint64_t, uint64_t>> meta;
+    std::vector<uint64_t> data;
+    
+    public:
+    template <class bv_type, uint16_t k = 32>
+    h0_bv(const bv_type& bv) : meta(), data(), blocks(0) {
+        const uint64_t* bv_data = bv.data();
+        uint64_t size = bv.size();
+        uint64_t block = 0;
+        uint64_t offset = 0;
+        uint64_t running_rank = 0;
+        while (size) {
+            if (block % k == 0) {
+                meta.push_back({offset, running_rank});
+            }
+            uint64_t elem = bv_data[block++];
+            auto enc = coder.encode(elem);
+            running_rank += __builtin_popcountll(elem);
+
+        }
+    }
+};
+
+} // namespace h0
