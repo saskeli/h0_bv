@@ -8,7 +8,7 @@
 
 namespace h0 {
 namespace internal {
-    
+
 constexpr uint64_t gcd(uint64_t a, uint64_t b) {
     if (a != b) {
         if (a < b) {
@@ -144,18 +144,21 @@ template <uint16_t n = 64, std::array<uint64_t, (n / 2) + 1> b32 = binoms<32>(),
 class mults {
    private:
     template <uint16_t b>
-    inline constexpr uint64_t encode(uint16_t k, uint64_t bv) {
+    inline constexpr uint64_t encode(uint16_t k, uint64_t bv) const {
+        if constexpr (b == 8) {
+            //std::cerr << "byte f: " << byte_mapping<>::get_f(bv) << std::endl;
+            return byte_mapping<>::get_f(bv);
+        }
         if (k == 0) {
-            // std::cerr << b << " 0f: " << 0 << std::endl;
+            //std::cerr << b << " 0f: " << 0 << std::endl;
             return 0;
         } else if (k == 1) {
-            // std::cerr << b << " 1f: " << __builtin_ctzll(bv) << std::endl;
+            //std::cerr << b << " 1f: " << __builtin_ctzll(bv) << std::endl;
             return __builtin_ctzll(bv);
-        }
-        if constexpr (b == 8) {
-            // std::cerr << "byte f: " << byte_mapping<>::get_f(bv) <<
-            // std::endl;
-            return byte_mapping<>::get_f(bv);
+        } else if (k == b) {
+            return 0;
+        } else if (k == b - 1) {
+            return b - __builtin_ctzll(~bv) - 1;
         }
         const constexpr uint64_t mask = (uint64_t(1) << (b / 2)) - 1;
         uint64_t bvs = bv & mask;
@@ -171,9 +174,9 @@ class mults {
             } else if constexpr (b == 32) {
                 tot += b16[i] * b16[k - i];
             } else {
-                // std::cerr << "tot " << tot << " -> ";
+                //std::cerr << "tot " << tot << " -> ";
                 tot += b8[i] * b8[k - i];
-                // std::cerr << tot << std::endl;
+                //std::cerr << tot << std::endl;
             }
         }
 
@@ -182,17 +185,17 @@ class mults {
         } else if constexpr (b == 32) {
             tot += fp * b16[ks];
         } else {
-            // std::cerr << "tot " << tot << " inc to ";
+            //std::cerr << "tot " << tot << " inc to ";
             tot += fp * b8[ks];
-            // std::cerr << tot << std::endl;
+            //std::cerr << tot << std::endl;
         }
         tot += fs;
-        // std::cerr << b << " f: " << tot << std::endl;
+        //std::cerr << b << " f: " << tot << std::endl;
         return tot;
     }
 
     template <uint16_t b>
-    inline constexpr void kp_f(uint16_t k, uint64_t& f, uint16_t& kp) {
+    inline constexpr void kp_f(uint16_t k, uint64_t& f, uint16_t& kp) const {
         kp = k > (b / 2) ? k - (b / 2) : 0;
         uint64_t f_lim = 0;
         uint16_t end = k < (b / 2) ? k : b / 2;
@@ -217,9 +220,26 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr uint64_t decode(uint16_t k, uint64_t f) {
+    inline constexpr uint64_t decode(uint16_t k, uint64_t f) const {
         if constexpr (b == 8) {
             return byte_mapping<>::f_byte(k, f);
+        }
+        if (k == b) {
+            if constexpr (b == 64) {
+                return ~uint64_t(0);
+            } else {
+                return (uint64_t(1) << b) - 1;
+            }
+        } else if (k == 0) {
+            return 0;
+        } else if (k == 1) {
+            return uint64_t(1) << f;
+        } else if (k == b - 1) {
+            if (b == 64) {
+                return (~uint64_t(0)) ^ (uint64_t(1) << (b - f - 1));
+            } else {
+                return ((uint64_t(1) << b) - 1) ^ (uint64_t(1) << (b - f - 1));
+            }
         }
         uint16_t kp;
         kp_f<b>(k, f, kp);
@@ -238,13 +258,21 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) {
-        if (i >= b) {
-            return k;
-        }
+    inline constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) const {
         if constexpr (b == 8) {
             auto by = byte_mapping<>::f_byte(k, f);
             return __builtin_popcount(by & ((uint16_t(1) << i) - 1));
+        }
+        if (i >= b) {
+            return k;
+        } else if (k == 0) {
+            return 0;
+        } else if (k == b) {
+            return i;
+        } else if (k == 1) {
+            return f < i;
+        } else if (k == b - 1) {
+            return i - uint64_t((b - f - 1) < i);
         }
         uint16_t kp;
         kp_f<b>(k, f, kp);
@@ -266,10 +294,19 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr bool access(uint16_t k, uint64_t f, uint16_t i) {
+    inline constexpr bool access(uint16_t k, uint64_t f, uint16_t i) const {
         if constexpr (b == 8) {
             auto by = byte_mapping<>::f_byte(k, f);
             return (by >> i) & uint8_t(1);
+        }
+        if (k == 0) {
+            return 0;
+        } else if (k == b) {
+            return 1;
+        } else if (k == 1) {
+            return f == i;
+        } else if (k == b - 1) {
+            return (b - f - 1) != i;
         }
         uint16_t kp;
         kp_f<b>(k, f, kp);
@@ -289,11 +326,20 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) {
+    inline constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) const {
         if constexpr (b == 8) {
             uint32_t by = byte_mapping<>::f_byte(k, f);
             uint16_t pos = uint16_t(1) << (s - 1);
             return __builtin_ctz(_pdep_u32(pos, by));
+        }
+        if (k == 0) {
+            return 0;
+        } else if (k == b) {
+            return s - 1;
+        } else if (k == 1) {
+            return f;
+        } else if (k == b - 1) {
+            return s - 1 + ((b - f - 1) < s);
         }
         uint16_t kp;
         kp_f<b>(k, f, kp);
@@ -313,9 +359,8 @@ class mults {
     }
 
    public:
-    constexpr std::pair<uint16_t, uint64_t> encode(uint64_t bv) {
-        /*std::cerr << "encoding " << bv << "(" << std::bitset<8>(bv >> 56) << "
-           "
+    constexpr std::pair<uint16_t, uint64_t> encode(uint64_t bv) const {
+        /*std::cerr << "encoding " << bv << "(" << std::bitset<8>(bv >> 56) << " "
                   << std::bitset<8>(bv >> 48) << " " << std::bitset<8>(bv >> 40)
                   << " " << std::bitset<8>(bv >> 32) << " "
                   << std::bitset<8>(bv >> 24) << " " << std::bitset<8>(bv >> 16)
@@ -326,76 +371,173 @@ class mults {
         return {k, encode<64>(k, bv)};
     }
 
-    constexpr uint64_t decode(uint16_t k, uint64_t f) {
+    constexpr uint64_t decode(uint16_t k, uint64_t f) const {
         return decode<64>(k, f);
     }
 
-    constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) {
+    constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) const {
         return rank<64>(k, f, i);
     }
 
-    constexpr bool access(uint16_t k, uint64_t f, uint16_t i) {
+    constexpr bool access(uint16_t k, uint64_t f, uint16_t i) const {
         return access<64>(k, f, i);
     }
 
-    constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) {
+    constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) const {
         return select<64>(k, f, s);
     }
 };
 
 class v_ints {
-    private:
+   private:
     std::vector<uint64_t> data;
-    public:
+
+   public:
     void append(uint64_t v, uint64_t off, uint16_t w) {
-        if (off + w > data.size() * 64) {
-            data.push_back(0);
-        }
         uint64_t mod = off % 64;
         uint64_t div = off / 64;
+        if (div + 1 >= data.size()) {
+            data.push_back(0);
+        }
         data[div] |= v << mod;
         if (mod + w > 64) {
-            data[div + 1] = v >> ((mod + 2) % 64);
+            data[div + 1] = v >> (64 - mod);
         }
     }
 
-    uint64_t read(uint64_t off, uint16_t w) {
+    uint64_t read(uint64_t off, uint16_t w) const {
         uint64_t mod = off % 64;
         uint64_t div = off / 64;
         uint64_t val = data[div] >> mod;
         if (mod + w > 64) {
-            // TODO: finish this sh... shtuff.
+            val |= data[div + 1] << (64 - mod);
         }
+        val &= (uint64_t(1) << w) - 1;
         return val;
+    }
+
+    uint64_t size() const {
+        return data.size();
     }
 };
 
-} // namespace internal
+template <uint16_t b>
+const constexpr std::array<uint64_t, b> f_widhts() {
+    std::array<uint64_t, b> ret;
+    auto bins = binoms<b>();
+    for (uint16_t i = 0; i < b; ++i) {
+        ret[i] = 64 - __builtin_clzll(bins[i] - 1);
+    }
+    return ret;
+}
 
+}  // namespace internal
+
+template <uint16_t k = 32>
 class h0_bv {
-    private:
-    static const internal::mults<> coder;
+   private:
+    static const constexpr internal::mults<> coder = internal::mults<>();
+    static const constexpr auto widths = internal::f_widhts<64>();
+    static const constexpr uint16_t block_width = 64;
+    static const constexpr uint16_t k_width = 7;
     std::vector<std::pair<uint64_t, uint64_t>> meta;
-    std::vector<uint64_t> data;
-    
-    public:
-    template <class bv_type, uint16_t k = 32>
-    h0_bv(const bv_type& bv) : meta(), data(), blocks(0) {
+    internal::v_ints data;
+
+   public:
+    template <class bv_type>
+    h0_bv(const bv_type& bv) : meta(), data() {
         const uint64_t* bv_data = bv.data();
         uint64_t size = bv.size();
         uint64_t block = 0;
         uint64_t offset = 0;
         uint64_t running_rank = 0;
-        while (size) {
+        uint64_t blocks = size / block_width + (size % block_width ? 1 : 0);
+        while (blocks--) {
             if (block % k == 0) {
+                //std::cerr << "block " << block << ": " << offset << ", " << running_rank << std::endl;
                 meta.push_back({offset, running_rank});
             }
             uint64_t elem = bv_data[block++];
             auto enc = coder.encode(elem);
-            running_rank += __builtin_popcountll(elem);
-
+            //std::cerr << std::bitset<64>(elem) << " -> " << enc.first << ", " << enc.second << std::endl;
+            running_rank += enc.first;
+            data.append(enc.first, offset, k_width);
+            offset += k_width;
+            data.append(enc.second, offset, widths[enc.first]);
+            //std::cerr << "                -> " << widths[enc.first] << std::endl;
+            offset += widths[enc.first];
         }
+    }
+
+    bool access(uint64_t i) const {
+        uint64_t block = i / block_width;
+        uint64_t s_block = block / k;
+        uint16_t b_offset = block % k;
+        i %= block_width;
+        uint64_t offset = meta[s_block].first;
+        for (uint64_t j = 0; j < k; ++j) {
+            if (b_offset == j) {
+                break;
+            }
+            auto bk = data.read(offset, k_width);
+            offset += k_width + widths[bk];
+        }
+        auto bk = data.read(offset, k_width);
+        offset += k_width;
+        auto f = data.read(offset, widths[bk]);
+        return coder.access(bk, f, i);
+    }
+
+    uint64_t rank(uint64_t i) const {
+        uint64_t block = i / block_width;
+        uint64_t s_block = block / k;
+        uint16_t b_offset = block % k;
+        i %= block_width;
+        uint64_t offset = meta[s_block].first;
+        uint64_t prefix_rank = meta[s_block].second;
+        for (uint64_t j = 0; j < k; ++j) {
+            if (b_offset == j) {
+                break;
+            }
+            auto bk = data.read(offset, k_width);
+            prefix_rank += bk;
+            offset += k_width + widths[bk];
+        }
+        auto bk = data.read(offset, k_width);
+        offset += k_width;
+        auto f = data.read(offset, widths[bk]);
+        return prefix_rank + coder.rank(bk, f, i);
+    }
+
+    uint64_t select(uint64_t s) const {
+        uint64_t a = 0;
+        uint64_t b = meta.size() - 1;
+        while (a < b) {
+            uint64_t m = (a + b + 1) / 2;
+            if (meta[m].second >= s) {
+                b = m - 1;
+            } else {
+                a = m;
+            }
+        }
+        uint64_t offset = meta[a].first;
+        s -= meta[a].second;
+        uint64_t res = k * a * block_width;
+        uint16_t bk = 0;
+        uint64_t f = 0;
+        for (uint16_t i = 0; i < k; ++i) {
+            bk = data.read(offset, k_width);
+            offset += k_width;
+            if (bk >= s) {
+                f = data.read(offset, widths[bk]);
+                break;
+            }
+            offset += widths[bk];
+            res += block_width;
+            s -= bk;
+        }
+        return res + coder.select(bk, f, s);
     }
 };
 
-} // namespace h0
+}  // namespace h0
