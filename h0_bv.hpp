@@ -138,11 +138,13 @@ class byte_mapping {
     static constexpr uint64_t get_f(uint8_t b) { return f_mapping[b]; }
 };
 
-template <uint16_t n = 64, std::array<uint64_t, (n / 2) + 1> b32 = binoms<32>(),
-          std::array<uint64_t, (n / 4) + 1> b16 = binoms<16>(),
-          std::array<uint64_t, (n / 8) + 1> b8 = binoms<8>()>
 class mults {
    private:
+    static const constexpr uint16_t n = 64;
+    static const constexpr std::array<uint64_t, n / 2 + 1> b32 = binoms<32>();
+    static const constexpr std::array<uint64_t, n / 4 + 1> b16 = binoms<16>();
+    static const constexpr std::array<uint64_t, n / 8 + 1> b8 = binoms<8>(); 
+
     template <uint16_t b>
     inline constexpr uint64_t encode(uint16_t k, uint64_t bv) const {
         if constexpr (b == 8) {
@@ -168,7 +170,10 @@ class mults {
         uint64_t fs = encode<b / 2>(ks, bvs);
         uint64_t tot = 0;
         uint16_t start = k > (b / 2) ? k - (b / 2) : 0;
-        for (uint16_t i = start; i < kp; ++i) {
+        for (uint16_t i = start; i < b; ++i) {
+            if (i == kp) {
+                break;
+            }
             if constexpr (b == 64) {
                 tot += b32[i] * b32[k - i];
             } else if constexpr (b == 32) {
@@ -194,12 +199,14 @@ class mults {
         return tot;
     }
 
-    template <uint16_t b>
+    template <uint16_t b> // TODO: Inefficient loop here
     inline constexpr void kp_f(uint16_t k, uint64_t& f, uint16_t& kp) const {
         kp = k > (b / 2) ? k - (b / 2) : 0;
         uint64_t f_lim = 0;
-        uint16_t end = k < (b / 2) ? k : b / 2;
-        for (uint16_t i = kp; i < end; ++i) {
+        for (uint16_t i = kp; i < b/2; ++i) {
+            if (i > k) {
+                break;
+            }
             uint64_t n_f_lim;
             if constexpr (b == 64) {
                 n_f_lim = f_lim + b32[i] * b32[k - i];
@@ -419,13 +426,17 @@ class v_ints {
     uint64_t size() const {
         return data.size();
     }
+
+    uint64_t bytes_size() const {
+        return sizeof(v_ints) + size() * 8;
+    }
 };
 
 template <uint16_t b>
-const constexpr std::array<uint64_t, b> f_widhts() {
-    std::array<uint64_t, b> ret;
+const constexpr std::array<uint64_t, b + 1> f_widhts() {
+    std::array<uint64_t, b + 1> ret;
     auto bins = binoms<b>();
-    for (uint16_t i = 0; i < b; ++i) {
+    for (uint16_t i = 0; i <= b; ++i) {
         ret[i] = 64 - __builtin_clzll(bins[i] - 1);
     }
     return ret;
@@ -436,31 +447,31 @@ const constexpr std::array<uint64_t, b> f_widhts() {
 template <uint16_t k = 32>
 class h0_bv {
    private:
-    static const constexpr internal::mults<> coder = internal::mults<>();
+    static const constexpr internal::mults coder = internal::mults();
     static const constexpr auto widths = internal::f_widhts<64>();
     static const constexpr uint16_t block_width = 64;
     static const constexpr uint16_t k_width = 7;
     std::vector<std::pair<uint64_t, uint64_t>> meta;
     internal::v_ints data;
+    uint64_t size_;
+    uint64_t sum_;
 
    public:
     template <class bv_type>
-    h0_bv(const bv_type& bv) : meta(), data() {
+    h0_bv(const bv_type& bv) : meta(), data(), sum_(0) {
         const uint64_t* bv_data = bv.data();
-        uint64_t size = bv.size();
+        size_ = bv.size();
         uint64_t block = 0;
         uint64_t offset = 0;
-        uint64_t running_rank = 0;
-        uint64_t blocks = size / block_width + (size % block_width ? 1 : 0);
+        uint64_t blocks = size_ / block_width + (size_ % block_width ? 1 : 0);
         while (blocks--) {
             if (block % k == 0) {
-                //std::cerr << "block " << block << ": " << offset << ", " << running_rank << std::endl;
-                meta.push_back({offset, running_rank});
+                meta.push_back({offset, sum_});
             }
             uint64_t elem = bv_data[block++];
             auto enc = coder.encode(elem);
             //std::cerr << std::bitset<64>(elem) << " -> " << enc.first << ", " << enc.second << std::endl;
-            running_rank += enc.first;
+            sum_ += enc.first;
             data.append(enc.first, offset, k_width);
             offset += k_width;
             data.append(enc.second, offset, widths[enc.first]);
@@ -537,6 +548,14 @@ class h0_bv {
             s -= bk;
         }
         return res + coder.select(bk, f, s);
+    }
+
+    uint64_t size() const {
+        return size_;
+    }
+
+    uint64_t bytes_size() const {
+        return sizeof(h0_bv) + meta.size() * 16 + data.bytes_size();
     }
 };
 
