@@ -387,7 +387,74 @@ class mults {
     }
 
     constexpr bool access(uint16_t k, uint64_t f, uint16_t i) const {
-        return access<64>(k, f, i);
+        //return access<64>(k, f, i);
+        //std::cerr << "access(" << k << ", " << f << ", " << i << ")" << std::endl;
+        if (k == 0) [[unlikely]] {
+            return 0;
+        }
+        if (k == n) [[unlikely]] {
+            return 1;
+        }
+        if (k == 1) [[unlikely]] {
+            return f == i;
+        }
+        if (k == n - 1) [[unlikely]] {
+            return (63 - f) != i;
+        }
+        uint16_t kp = 0;
+        kp_f<n>(k, f, kp);
+        uint16_t ks = k - kp;
+        uint64_t md = b32[ks];
+        bool r = i < n / 2;
+        bool l = !r;
+        k = ks * r + kp * l;
+        f = (f % md) * r + (f / md) * l;
+        i -= l * (n / 2);
+        //std::cerr << "      (" << k << ", " << f << ", " << i << ")" << std::endl;
+        /*if (k == 0) [[unlikely]] {
+            return 0;
+        }
+        if (k == n / 2) [[unlikely]] {
+            return 1;
+        }
+        if (k == 1) [[unlikely]] {
+            return f == i;
+        }
+        if (k == n / 2 - 1) [[unlikely]] {
+            return (31 - f) != i;
+        }*/
+        kp_f<n/2>(k, f, kp);
+        ks = k - kp;
+        md = b16[ks];
+        r = i < n / 4;
+        l = !r;
+        k = ks * r + kp * l;
+        f = (f % md) * r + (f / md) * l;
+        i -= l * (n / 4);
+        //std::cerr << "      (" << k << ", " << f << ", " << i << ")" << std::endl;
+        /*if (k == 0) [[unlikely]] {
+            return 0;
+        }
+        if (k == n / 4) [[unlikely]] {
+            return 1;
+        }
+        if (k == 1) [[unlikely]] {
+            return f == i;
+        }
+        if (k == n / 4 - 1) [[unlikely]] {
+            return (15 - f) != i;
+        }*/
+        kp_f<n/4>(k, f, kp);
+        ks = k - kp;
+        md = b8[ks];
+        r = i < n / 8;
+        l = !r;
+        k = ks * r + kp * l;
+        f = (f % md) * r + (f / md) * l;
+        i -= l * (n / 8);
+        //std::cerr << "      (" << k << ", " << f << ", " << i << ")" << std::endl;
+        auto by = byte_mapping<>::f_byte(k, f);
+        return (by >> i) & uint8_t(1);
     }
 
     constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) const {
