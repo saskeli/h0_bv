@@ -1,5 +1,6 @@
 #include <immintrin.h>
 
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <cstdint>
@@ -87,6 +88,49 @@ constexpr std::array<uint8_t, 256> byte_map() {
     return ret;
 }
 
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6,
+          class A7, class A8>
+constexpr auto concat(A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7,
+                      A8 a8) {
+    std::array<uint8_t, 256> ret;
+    size_t i = 0;
+    std::copy_n(a0.begin(), a0.size(), ret.begin() + i);
+    i += a0.size();
+    std::copy_n(a1.begin(), a1.size(), ret.begin() + i);
+    i += a1.size();
+    std::copy_n(a2.begin(), a2.size(), ret.begin() + i);
+    i += a2.size();
+    std::copy_n(a3.begin(), a3.size(), ret.begin() + i);
+    i += a3.size();
+    std::copy_n(a4.begin(), a4.size(), ret.begin() + i);
+    i += a4.size();
+    std::copy_n(a5.begin(), a5.size(), ret.begin() + i);
+    i += a5.size();
+    std::copy_n(a6.begin(), a6.size(), ret.begin() + i);
+    i += a6.size();
+    std::copy_n(a7.begin(), a7.size(), ret.begin() + i);
+    i += a7.size();
+    std::copy_n(a8.begin(), a8.size(), ret.begin() + i);
+    return ret;
+}
+
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6,
+          class A7>
+constexpr auto concat_count(A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+                            A7 a7) {
+    std::array<uint16_t, 9> ret;
+    ret[0] = 0;
+    ret[1] = ret[0] + a0.size();
+    ret[2] = ret[1] + a1.size();
+    ret[3] = ret[2] + a2.size();
+    ret[4] = ret[3] + a3.size();
+    ret[5] = ret[4] + a4.size();
+    ret[6] = ret[5] + a5.size();
+    ret[7] = ret[6] + a6.size();
+    ret[8] = ret[7] + a7.size();
+    return ret;
+}
+
 template <std::array<uint64_t, 9> byte_binoms = binoms()>
 class byte_mapping {
    private:
@@ -110,10 +154,15 @@ class byte_mapping {
         byte_examples<byte_binoms[8], 0b11111111>();
     static const constexpr std::array<uint8_t, 256> f_mapping =
         byte_map<b0, b1, b2, b3, b4, b5, b6, b7, b8>();
+    static const constexpr std::array<uint8_t, 256> b_mapping =
+        concat(b0, b1, b2, b3, b4, b5, b6, b7, b8);
+    static const constexpr std::array<uint16_t, 9> bc_mapping =
+        concat_count(b0, b1, b2, b3, b4, b5, b6, b7);
 
    public:
     static constexpr uint8_t f_byte(uint16_t k, uint64_t f) {
-        switch (k) {
+        return b_mapping[bc_mapping[k] + f];
+        /*switch (k) {
             case 0:
                 return b0[f];
             case 1:
@@ -132,30 +181,73 @@ class byte_mapping {
                 return b7[f];
             default:
                 return b8[f];
-        }
+        }*/
     }
 
     static constexpr uint64_t get_f(uint8_t b) { return f_mapping[b]; }
 };
+
+template <class A, class B>
+constexpr void fill(uint16_t t_idx, uint16_t s_idx, uint16_t hop, A& trg,
+                    B& src) {
+    trg[t_idx] = src[s_idx];
+    if (hop == 0) {
+        return;
+    }
+    fill(t_idx * 2, s_idx - hop, hop / 2, trg, src);
+    fill(t_idx * 2 + 1, s_idx + hop, hop / 2, trg, src);
+}
+
+template <uint16_t b>
+constexpr std::array<std::array<uint64_t, b / 2>, b + 1> f_lims() {
+    std::array<std::array<uint64_t, b / 2 + 1>, b + 1> tmp;
+    auto bins = binoms<b / 2>();
+    for (uint16_t k = 0; k <= b; ++k) {
+        tmp[k][0] = 0;
+        for (uint16_t i = 0; i < b / 2; ++i) {
+            if (k > b / 2 && i < (k - b / 2)) {
+                tmp[k][i + 1] = 0;
+            } else if (i > k) {
+                tmp[k][i + 1] = tmp[k][i];
+            } else {
+                tmp[k][i + 1] = tmp[k][i];
+                tmp[k][i + 1] += bins[i] * bins[k - i];
+            }
+        }
+    }
+    std::array<std::array<uint64_t, b / 2>, b + 1> ret;
+    for (uint16_t k = 0; k <= b; ++k) {
+        ret[k][0] = tmp[k][b / 2];
+        fill(1, b / 4, b / 8, ret[k], tmp[k]);
+    }
+    return ret;
+}
 
 class mults {
    private:
     static const constexpr uint16_t n = 64;
     static const constexpr std::array<uint64_t, n / 2 + 1> b32 = binoms<32>();
     static const constexpr std::array<uint64_t, n / 4 + 1> b16 = binoms<16>();
-    static const constexpr std::array<uint64_t, n / 8 + 1> b8 = binoms<8>(); 
+    static const constexpr std::array<uint64_t, n / 8 + 1> b8 = binoms<8>();
+    static const constexpr std::array<std::array<uint64_t, n / 2>, n + 1>
+        f_lim64 = f_lims<64>();
+    static const constexpr std::array<std::array<uint64_t, n / 4>, n / 2 + 1>
+        f_lim32 = f_lims<32>();
+    static const constexpr std::array<std::array<uint64_t, n / 8>, n / 4 + 1>
+        f_lim16 = f_lims<16>();
 
     template <uint16_t b>
-    inline constexpr uint64_t encode(uint16_t k, uint64_t bv) const {
+    inline static constexpr uint64_t encode(uint16_t k, uint64_t bv) {
         if constexpr (b == 8) {
-            //std::cerr << "byte f: " << byte_mapping<>::get_f(bv) << std::endl;
+            // std::cerr << "byte f: " << byte_mapping<>::get_f(bv) <<
+            // std::endl;
             return byte_mapping<>::get_f(bv);
         }
         if (k == 0) {
-            //std::cerr << b << " 0f: " << 0 << std::endl;
+            // std::cerr << b << " 0f: " << 0 << std::endl;
             return 0;
         } else if (k == 1) {
-            //std::cerr << b << " 1f: " << __builtin_ctzll(bv) << std::endl;
+            // std::cerr << b << " 1f: " << __builtin_ctzll(bv) << std::endl;
             return __builtin_ctzll(bv);
         } else if (k == b) {
             return 0;
@@ -179,9 +271,9 @@ class mults {
             } else if constexpr (b == 32) {
                 tot += b16[i] * b16[k - i];
             } else {
-                //std::cerr << "tot " << tot << " -> ";
+                // std::cerr << "tot " << tot << " -> ";
                 tot += b8[i] * b8[k - i];
-                //std::cerr << tot << std::endl;
+                // std::cerr << tot << std::endl;
             }
         }
 
@@ -190,44 +282,99 @@ class mults {
         } else if constexpr (b == 32) {
             tot += fp * b16[ks];
         } else {
-            //std::cerr << "tot " << tot << " inc to ";
+            // std::cerr << "tot " << tot << " inc to ";
             tot += fp * b8[ks];
-            //std::cerr << tot << std::endl;
+            // std::cerr << tot << std::endl;
         }
         tot += fs;
-        //std::cerr << b << " f: " << tot << std::endl;
+        // std::cerr << b << " f: " << tot << std::endl;
         return tot;
     }
 
-    template <uint16_t b> // TODO: Inefficient loop here
-    inline constexpr void kp_f(uint16_t k, uint64_t& f, uint16_t& kp) const {
-        kp = k > (b / 2) ? k - (b / 2) : 0;
+    template <uint16_t b>
+    inline static constexpr uint16_t kp_f(uint16_t k, uint64_t& f) {
+        uint16_t kp = 0;
+        uint16_t i = 1;
         uint64_t f_lim = 0;
-        for (uint16_t i = kp; i < b/2; ++i) {
-            if (i > k) {
-                break;
-            }
-            uint64_t n_f_lim;
-            if constexpr (b == 64) {
-                n_f_lim = f_lim + b32[i] * b32[k - i];
-            } else if constexpr (b == 32) {
-                n_f_lim = f_lim + b16[i] * b16[k - i];
-            } else {
-                n_f_lim = f_lim + b8[i] * b8[k - i];
-            }
-            if (n_f_lim <= f) {
-                ++kp;
-                f_lim = n_f_lim;
-            } else {
-                break;
-            }
+        if constexpr (b == 64) {
+            uint64_t fl_v = f_lim64[k][i];
+            bool r = fl_v <= f;
+            f_lim = r ? fl_v : f_lim;
+            i = i * 2 + r;
+            kp += r * b / 4;
+            fl_v = f_lim64[k][i];
+            r = fl_v <= f;
+            f_lim = r ? fl_v : f_lim;
+            i = i * 2 + r;
+            kp += r * b / 8;
+            fl_v = f_lim64[k][i];
+            r = fl_v <= f;
+            f_lim = r ? fl_v : f_lim;
+            i = i * 2 + r;
+            kp += r * b / 16;
+            fl_v = f_lim64[k][i];
+            r = fl_v <= f;
+            f_lim = r ? fl_v : f_lim;
+            i = i * 2 + r;
+            kp += r * b / 32;
+            fl_v = f_lim64[k][i];
+            r = fl_v <= f;
+            f_lim = r ? fl_v : f_lim;
+            kp += r;
+            fl_v = f_lim64[k][0];
+            r = f >= fl_v;
+            kp += r;
+            f_lim = r ? fl_v : f_lim;
+        } else if constexpr (b == 32) {
+            uint64_t fl_v = f_lim32[k][i];
+            bool r = fl_v <= f;
+            i = i * 2 + r;
+            kp += r * b / 4;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim32[k][i];
+            r = fl_v <= f;
+            i = i * 2 + r;
+            kp += r * b / 8;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim32[k][i];
+            r = fl_v <= f;
+            i = i * 2 + r;
+            kp += r * b / 16;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim32[k][i];
+            r = fl_v <= f;
+            kp += r;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim32[k][0];
+            r = f >= fl_v;
+            kp += r;
+            f_lim = r ? fl_v : f_lim;
+        } else {
+            uint64_t fl_v = f_lim16[k][i];
+            bool r = fl_v <= f;
+            i = i * 2 + r;
+            kp += r * b / 4;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim16[k][i];
+            r = fl_v <= f;
+            i = i * 2 + r;
+            kp += r * b / 8;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim16[k][i];
+            r = fl_v <= f;
+            kp += r;
+            f_lim = r ? fl_v : f_lim;
+            fl_v = f_lim16[k][0];
+            r = f >= fl_v;
+            kp += r;
+            f_lim = r ? fl_v : f_lim;
         }
         f -= f_lim;
-        return;
+        return kp;
     }
 
     template <uint16_t b>
-    inline constexpr uint64_t decode(uint16_t k, uint64_t f) const {
+    inline static constexpr uint64_t decode(uint16_t k, uint64_t f) {
         if constexpr (b == 8) {
             return byte_mapping<>::f_byte(k, f);
         }
@@ -248,8 +395,7 @@ class mults {
                 return ((uint64_t(1) << b) - 1) ^ (uint64_t(1) << (b - f - 1));
             }
         }
-        uint16_t kp;
-        kp_f<b>(k, f, kp);
+        uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;
         if constexpr (b == 64) {
@@ -265,7 +411,7 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) const {
+    inline static constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) {
         if constexpr (b == 8) {
             auto by = byte_mapping<>::f_byte(k, f);
             return __builtin_popcount(by & ((uint16_t(1) << i) - 1));
@@ -281,8 +427,7 @@ class mults {
         } else if (k == b - 1) {
             return i - uint64_t((b - f - 1) < i);
         }
-        uint16_t kp;
-        kp_f<b>(k, f, kp);
+        uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;
         if constexpr (b == 64) {
@@ -301,7 +446,7 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr bool access(uint16_t k, uint64_t f, uint16_t i) const {
+    inline static constexpr bool access(uint16_t k, uint64_t f, uint16_t i) {
         if constexpr (b == 8) {
             auto by = byte_mapping<>::f_byte(k, f);
             return (by >> i) & uint8_t(1);
@@ -315,8 +460,7 @@ class mults {
         } else if (k == b - 1) {
             return (b - f - 1) != i;
         }
-        uint16_t kp;
-        kp_f<b>(k, f, kp);
+        uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;
         if constexpr (b == 64) {
@@ -333,7 +477,8 @@ class mults {
     }
 
     template <uint16_t b>
-    inline constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) const {
+    inline static constexpr uint64_t select(uint16_t k, uint64_t f,
+                                            uint16_t s) {
         if constexpr (b == 8) {
             uint32_t by = byte_mapping<>::f_byte(k, f);
             uint16_t pos = uint16_t(1) << (s - 1);
@@ -348,8 +493,7 @@ class mults {
         } else if (k == b - 1) {
             return s - 1 + ((b - f - 1) < s);
         }
-        uint16_t kp;
-        kp_f<b>(k, f, kp);
+        uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;
         if constexpr (b == 64) {
@@ -366,8 +510,9 @@ class mults {
     }
 
    public:
-    constexpr std::pair<uint16_t, uint64_t> encode(uint64_t bv) const {
-        /*std::cerr << "encoding " << bv << "(" << std::bitset<8>(bv >> 56) << " "
+    inline static constexpr std::pair<uint16_t, uint64_t> encode(uint64_t bv) {
+        /*std::cerr << "encoding " << bv << "(" << std::bitset<8>(bv >> 56) << "
+           "
                   << std::bitset<8>(bv >> 48) << " " << std::bitset<8>(bv >> 40)
                   << " " << std::bitset<8>(bv >> 32) << " "
                   << std::bitset<8>(bv >> 24) << " " << std::bitset<8>(bv >> 16)
@@ -378,17 +523,18 @@ class mults {
         return {k, encode<64>(k, bv)};
     }
 
-    constexpr uint64_t decode(uint16_t k, uint64_t f) const {
+    inline static constexpr uint64_t decode(uint16_t k, uint64_t f) {
         return decode<64>(k, f);
     }
 
-    constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) const {
+    inline static constexpr uint64_t rank(uint16_t k, uint64_t f, uint16_t i) {
         return rank<64>(k, f, i);
     }
 
-    constexpr bool access(uint16_t k, uint64_t f, uint16_t i) const {
-        //return access<64>(k, f, i);
-        //std::cerr << "access(" << k << ", " << f << ", " << i << ")" << std::endl;
+    inline static constexpr bool access(uint16_t k, uint64_t f, uint16_t i) {
+        // return access<64>(k, f, i);
+        // std::cerr << "access(" << k << ", " << f << ", " << i << ")" <<
+        // std::endl;
         if (k == 0) [[unlikely]] {
             return 0;
         }
@@ -401,8 +547,7 @@ class mults {
         if (k == n - 1) [[unlikely]] {
             return (63 - f) != i;
         }
-        uint16_t kp = 0;
-        kp_f<n>(k, f, kp);
+        uint16_t kp = kp_f<n>(k, f);
         uint16_t ks = k - kp;
         uint64_t md = b32[ks];
         bool r = i < n / 2;
@@ -410,7 +555,8 @@ class mults {
         k = ks * r + kp * l;
         f = (f % md) * r + (f / md) * l;
         i -= l * (n / 2);
-        //std::cerr << "      (" << k << ", " << f << ", " << i << ")" << std::endl;
+        // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
+        // std::endl;
         /*if (k == 0) [[unlikely]] {
             return 0;
         }
@@ -423,7 +569,7 @@ class mults {
         if (k == n / 2 - 1) [[unlikely]] {
             return (31 - f) != i;
         }*/
-        kp_f<n/2>(k, f, kp);
+        kp = kp_f<n / 2>(k, f);
         ks = k - kp;
         md = b16[ks];
         r = i < n / 4;
@@ -431,7 +577,8 @@ class mults {
         k = ks * r + kp * l;
         f = (f % md) * r + (f / md) * l;
         i -= l * (n / 4);
-        //std::cerr << "      (" << k << ", " << f << ", " << i << ")" << std::endl;
+        // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
+        // std::endl;
         /*if (k == 0) [[unlikely]] {
             return 0;
         }
@@ -444,7 +591,7 @@ class mults {
         if (k == n / 4 - 1) [[unlikely]] {
             return (15 - f) != i;
         }*/
-        kp_f<n/4>(k, f, kp);
+        kp = kp_f<n / 4>(k, f);
         ks = k - kp;
         md = b8[ks];
         r = i < n / 8;
@@ -452,12 +599,14 @@ class mults {
         k = ks * r + kp * l;
         f = (f % md) * r + (f / md) * l;
         i -= l * (n / 8);
-        //std::cerr << "      (" << k << ", " << f << ", " << i << ")" << std::endl;
+        // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
+        // std::endl;
         auto by = byte_mapping<>::f_byte(k, f);
         return (by >> i) & uint8_t(1);
     }
 
-    constexpr uint64_t select(uint16_t k, uint64_t f, uint16_t s) const {
+    inline static constexpr uint64_t select(uint16_t k, uint64_t f,
+                                            uint16_t s) {
         return select<64>(k, f, s);
     }
 };
@@ -490,13 +639,9 @@ class v_ints {
         return val;
     }
 
-    uint64_t size() const {
-        return data.size();
-    }
+    uint64_t size() const { return data.size(); }
 
-    uint64_t bytes_size() const {
-        return sizeof(v_ints) + size() * 8;
-    }
+    uint64_t bytes_size() const { return sizeof(v_ints) + size() * 8; }
 };
 
 template <uint16_t b>
@@ -537,12 +682,14 @@ class h0_bv {
             }
             uint64_t elem = bv_data[block++];
             auto enc = coder.encode(elem);
-            //std::cerr << std::bitset<64>(elem) << " -> " << enc.first << ", " << enc.second << std::endl;
+            // std::cerr << std::bitset<64>(elem) << " -> " << enc.first << ", "
+            // << enc.second << std::endl;
             sum_ += enc.first;
             data.append(enc.first, offset, k_width);
             offset += k_width;
             data.append(enc.second, offset, widths[enc.first]);
-            //std::cerr << "                -> " << widths[enc.first] << std::endl;
+            // std::cerr << "                -> " << widths[enc.first] <<
+            // std::endl;
             offset += widths[enc.first];
         }
     }
@@ -617,9 +764,7 @@ class h0_bv {
         return res + coder.select(bk, f, s);
     }
 
-    uint64_t size() const {
-        return size_;
-    }
+    uint64_t size() const { return size_; }
 
     uint64_t bytes_size() const {
         return sizeof(h0_bv) + meta.size() * 16 + data.bytes_size();
