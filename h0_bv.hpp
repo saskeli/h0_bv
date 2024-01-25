@@ -532,7 +532,7 @@ class mults {
     }
 
     inline static constexpr bool access(uint16_t k, uint64_t f, uint16_t i) {
-        // return access<64>(k, f, i);
+        //return access<64>(k, f, i);
         // std::cerr << "access(" << k << ", " << f << ", " << i << ")" <<
         // std::endl;
         if (k == 0) [[unlikely]] {
@@ -557,7 +557,7 @@ class mults {
         i -= l * (n / 2);
         // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
         // std::endl;
-        /*if (k == 0) [[unlikely]] {
+        if (k == 0) [[unlikely]] {
             return 0;
         }
         if (k == n / 2) [[unlikely]] {
@@ -568,7 +568,7 @@ class mults {
         }
         if (k == n / 2 - 1) [[unlikely]] {
             return (31 - f) != i;
-        }*/
+        }
         kp = kp_f<n / 2>(k, f);
         ks = k - kp;
         md = b16[ks];
@@ -579,7 +579,7 @@ class mults {
         i -= l * (n / 4);
         // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
         // std::endl;
-        /*if (k == 0) [[unlikely]] {
+        if (k == 0) [[unlikely]] {
             return 0;
         }
         if (k == n / 4) [[unlikely]] {
@@ -590,7 +590,7 @@ class mults {
         }
         if (k == n / 4 - 1) [[unlikely]] {
             return (15 - f) != i;
-        }*/
+        }
         kp = kp_f<n / 4>(k, f);
         ks = k - kp;
         md = b8[ks];
@@ -619,6 +619,7 @@ class v_ints {
     void append(uint64_t v, uint64_t off, uint16_t w) {
         uint64_t mod = off % 64;
         uint64_t div = off / 64;
+        //std::cerr << div << std::endl;
         if (div + 1 >= data.size()) {
             data.push_back(0);
         }
