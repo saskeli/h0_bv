@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "input sdsl bv file required" << std::endl;
         exit(1);
     }
-    uint64_t n = 1000000;
+    uint64_t n = 100000000;
     sdsl::bit_vector bv;
     bool res = sdsl::load_from_file(bv, argv[1]);
     if (!res) {
