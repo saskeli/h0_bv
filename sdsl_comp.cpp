@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
         bool r = rrr_bv.access(q[i]);
 #ifndef TIME
         if (r != c) {
-            std::cerr << "bv[" << q[i] << "] = " << c << " != rrr_bv.access(" << q[i]
+            std::cerr << "sdsl.access[" << q[i] << "] = " << c << " != h0_bv.access(" << q[i]
                       << ") = " << r << std::endl;
             exit(1);
         }
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
         uint64_t r = rrr_bv.rank(q[i]);
 #ifndef TIME
         if (r != c) {
-            std::cerr << "rs.rank(" << i << ") = " << c << " != rrr_bv.rank("
+            std::cerr << "sdsl.rank(" << i << ") = " << c << " != h0_bv.rank("
                       << i << ") = " << r << std::endl;
             exit(1);
         }
@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
         uint64_t r = rrr_bv.select(q[i]);
 #ifndef TIME
         if (r != c) {
-            std::cerr << "ss.select(" << i << ") = " << c
-                      << " != rrr_bv.select(" << i << ") = " << r << std::endl;
+            std::cerr << "sdsl.select(" << i << ") = " << c
+                      << " != h0_bv.select(" << i << ") = " << r << std::endl;
             exit(1);
         }
 #else 

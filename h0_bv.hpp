@@ -14,6 +14,7 @@ namespace internal {
 class mults {
    private:
     static const constexpr uint16_t n = 64;
+    static const constexpr std::array<uint64_t, n + 1> b64 = binoms<64>();
     static const constexpr std::array<uint64_t, n / 2 + 1> b32 = binoms<32>();
     static const constexpr std::array<uint64_t, n / 4 + 1> b16 = binoms<16>();
     static const constexpr std::array<uint64_t, n / 8 + 1> b8 = binoms<8>();
@@ -307,6 +308,15 @@ class mults {
         if (k == n - 1) [[unlikely]] {
             return (63 - f) != i;
         }
+        if (f == 0) [[unlikely]] {
+            return k > i;
+        }
+        if (f == b64[k] - 1) [[unlikely]] {
+            /*std::cerr << "64: i = " << i << ", k = " << k << ", ";
+            std::cerr << "f = " << b64[k] << " -> " << (i >= (n - k)) << std::endl;*/
+            return i >= (n - k);
+        }
+
         uint16_t kp = kp_f<n>(k, f);
         uint16_t ks = k - kp;
         uint64_t md = b32[ks];
@@ -329,6 +339,12 @@ class mults {
         if (k == n / 2 - 1) [[unlikely]] {
             return (31 - f) != i;
         }
+        /*if (f == 0) [[unlikely]] {
+            return k > i;
+        }
+        if (f == b32[k] - 1) [[unlikely]] {
+            return i >= (n / 2 - k);
+        }*/
         kp = kp_f<n / 2>(k, f);
         ks = k - kp;
         md = b16[ks];
@@ -351,6 +367,12 @@ class mults {
         if (k == n / 4 - 1) [[unlikely]] {
             return (15 - f) != i;
         }
+        /*if (f == 0) [[unlikely]] {
+            return k > i;
+        }
+        if (f == b16[k] - 1) [[unlikely]] {
+            return i >= (n / 4 - k);
+        }*/
         kp = kp_f<n / 4>(k, f);
         ks = k - kp;
         md = b8[ks];
@@ -469,7 +491,7 @@ class h0_bv {
             // std::endl;
             offset += widths[enc.first];
         }
-        std::cerr << tranition_blocks << " of " << total_blocks << " (" << double(tranition_blocks) / total_blocks << ") are transition blocks" << std::endl;
+        //std::cerr << tranition_blocks << " of " << total_blocks << " (" << double(tranition_blocks) / total_blocks << ") are transition blocks" << std::endl;
     }
 
     bool access(uint64_t i) const {
