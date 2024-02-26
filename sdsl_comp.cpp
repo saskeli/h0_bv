@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include "h0_bv.hpp"
+#include "h0_it.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -30,12 +30,12 @@ int main(int argc, char* argv[]) {
 #endif
     h0::h0_bv<> rrr_bv(bv);
     uint64_t tot = rs.rank(bv.size());
-    std::cout << "created necessary structures with " << tot << " 1-bits" << std::endl;
+    std::cout << "created necessary " << bv.size() << "-bit structures with " << tot << " 1-bits" << std::endl;
 
     std::vector<uint64_t> q;
     std::random_device rd;  
     std::mt19937 gen(argc > 2 ? std::stoull(argv[2]) : rd()); 
-    std::uniform_int_distribution<uint64_t> distrib(0, bv.size());
+    std::uniform_int_distribution<uint64_t> distrib(0, bv.size() - 1);
  
     for (uint64_t i = 0; i < n; ++i) {
         q.push_back(distrib(gen));
@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
         uint64_t r = rrr_bv.rank(q[i]);
 #ifndef TIME
         if (r != c) {
-            std::cerr << "sdsl.rank(" << i << ") = " << c << " != h0_bv.rank("
-                      << i << ") = " << r << std::endl;
+            std::cerr << "sdsl.rank(" << q[i] << ") = " << c << " != h0_bv.rank("
+                      << q[i] << ") = " << r << std::endl;
             exit(1);
         }
 #else 
@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
         uint64_t r = rrr_bv.select(q[i]);
 #ifndef TIME
         if (r != c) {
-            std::cerr << "sdsl.select(" << i << ") = " << c
-                      << " != h0_bv.select(" << i << ") = " << r << std::endl;
+            std::cerr << "sdsl.select(" << q[i] << ") = " << c
+                      << " != h0_bv.select(" << q[i] << ") = " << r << std::endl;
             exit(1);
         }
 #else 

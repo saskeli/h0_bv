@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <algorithm>
 
 namespace h0 {
 namespace internal {
@@ -196,6 +197,32 @@ constexpr std::array<std::array<uint64_t, b / 2>, b + 1> f_lims() {
     for (uint16_t k = 0; k <= b; ++k) {
         ret[k][0] = tmp[k][b / 2];
         fill(1, b / 4, b / 8, ret[k], tmp[k]);
+    }
+    return ret;
+}
+
+template <uint16_t b>
+constexpr std::array<std::array<uint64_t, 8>, b + 1> f_lims_it() {
+    std::array<std::array<uint64_t, 8 + 1>, b + 1> tmp;
+    auto bins_s = binoms<b - 8>();
+    auto bins_p = binoms<8>();
+    for (uint16_t k = 0; k <= b; ++k) {
+        tmp[k][0] = 0;
+        for (uint16_t i = 0; i < 8; ++i) {
+            if (k > b - 8 && i < (k - (b - 8))) {
+                tmp[k][i + 1] = 0;
+            } else if (i > k) {
+                tmp[k][i + 1] = tmp[k][i];
+            } else {
+                tmp[k][i + 1] = tmp[k][i];
+                tmp[k][i + 1] += bins_p[i] * bins_s[k - i];
+            }
+        }
+    }
+    std::array<std::array<uint64_t, 8>, b + 1> ret;
+    for (uint16_t k = 0; k <= b; ++k) {
+        ret[k][0] = tmp[k][8];
+        fill(1, 4, 2, ret[k], tmp[k]);
     }
     return ret;
 }

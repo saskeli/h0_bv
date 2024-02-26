@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 
+#include <sdsl/int_vector.hpp>
 #include "internal.hpp"
 
 namespace h0 {
@@ -296,18 +297,6 @@ class mults {
     inline static constexpr bool access(uint16_t k, uint64_t f, uint16_t i) {
         // std::cerr << "access(" << k << ", " << f << ", " << i << ")" <<
         // std::endl;
-        if (k == 0) [[unlikely]] {
-            return 0;
-        }
-        if (k == n) [[unlikely]] {
-            return 1;
-        }
-        if (k == 1) [[unlikely]] {
-            return f == i;
-        }
-        if (k == n - 1) [[unlikely]] {
-            return (63 - f) != i;
-        }
         if (f == 0) [[unlikely]] {
             return k > i;
         }
@@ -316,7 +305,12 @@ class mults {
             std::cerr << "f = " << b64[k] << " -> " << (i >= (n - k)) << std::endl;*/
             return i >= (n - k);
         }
-
+        if (k == 1) [[unlikely]] {
+            return f == i;
+        }
+        if (k == n - 1) [[unlikely]] {
+            return (63 - f) != i;
+        }
         uint16_t kp = kp_f<n>(k, f);
         uint16_t ks = k - kp;
         uint64_t md = b32[ks];
@@ -327,11 +321,11 @@ class mults {
         i -= l * (n / 2);
         // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
         // std::endl;
-        if (k == 0) [[unlikely]] {
-            return 0;
+        if (f == 0) [[unlikely]] {
+            return k > i;
         }
-        if (k == n / 2) [[unlikely]] {
-            return 1;
+        if (f == b32[k] - 1) [[unlikely]] {
+            return i >= (n / 2 - k);
         }
         if (k == 1) [[unlikely]] {
             return f == i;
@@ -339,12 +333,6 @@ class mults {
         if (k == n / 2 - 1) [[unlikely]] {
             return (31 - f) != i;
         }
-        /*if (f == 0) [[unlikely]] {
-            return k > i;
-        }
-        if (f == b32[k] - 1) [[unlikely]] {
-            return i >= (n / 2 - k);
-        }*/
         kp = kp_f<n / 2>(k, f);
         ks = k - kp;
         md = b16[ks];
@@ -355,11 +343,11 @@ class mults {
         i -= l * (n / 4);
         // std::cerr << "      (" << k << ", " << f << ", " << i << ")" <<
         // std::endl;
-        if (k == 0) [[unlikely]] {
-            return 0;
+        if (f == 0) [[unlikely]] {
+            return k > i;
         }
-        if (k == n / 4) [[unlikely]] {
-            return 1;
+        if (f == b16[k] - 1) [[unlikely]] {
+            return i >= (n / 4 - k);
         }
         if (k == 1) [[unlikely]] {
             return f == i;
@@ -367,12 +355,6 @@ class mults {
         if (k == n / 4 - 1) [[unlikely]] {
             return (15 - f) != i;
         }
-        /*if (f == 0) [[unlikely]] {
-            return k > i;
-        }
-        if (f == b16[k] - 1) [[unlikely]] {
-            return i >= (n / 4 - k);
-        }*/
         kp = kp_f<n / 4>(k, f);
         ks = k - kp;
         md = b8[ks];
@@ -393,40 +375,6 @@ class mults {
     }
 };
 
-class v_ints {
-   private:
-    std::vector<uint64_t> data;
-
-   public:
-    void append(uint64_t v, uint64_t off, uint16_t w) {
-        uint64_t mod = off % 64;
-        uint64_t div = off / 64;
-        //std::cerr << div << std::endl;
-        if (div + 1 >= data.size()) {
-            data.push_back(0);
-        }
-        data[div] |= v << mod;
-        if (mod + w > 64) {
-            data[div + 1] = v >> (64 - mod);
-        }
-    }
-
-    uint64_t read(uint64_t off, uint16_t w) const {
-        uint64_t mod = off % 64;
-        uint64_t div = off / 64;
-        uint64_t val = data[div] >> mod;
-        if (mod + w > 64) {
-            val |= data[div + 1] << (64 - mod);
-        }
-        val &= (uint64_t(1) << w) - 1;
-        return val;
-    }
-
-    uint64_t size() const { return data.size(); }
-
-    uint64_t bytes_size() const { return sizeof(v_ints) + size() * 8; }
-};
-
 template <uint16_t b>
 const constexpr std::array<uint64_t, b + 1> f_widhts() {
     std::array<uint64_t, b + 1> ret;
@@ -445,53 +393,58 @@ class h0_bv {
     static const constexpr auto widths = internal::f_widhts<64>();
     static const constexpr uint16_t block_width = 64;
     static const constexpr uint16_t k_width = 7;
-    std::vector<std::pair<uint64_t, uint64_t>> meta;
-    internal::v_ints data;
+    sdsl::int_vector<> meta_point;
+    sdsl::int_vector<> meta_rank;
+    sdsl::int_vector<> data_typ;
+    sdsl::bit_vector data_val;
     uint64_t size_;
     uint64_t sum_;
 
    public:
-    template <class bv_type>
-    h0_bv(const bv_type& bv) : meta(), data(), sum_(0) {
+    h0_bv(const sdsl::bit_vector& bv) : sum_(0) {
         const uint64_t* bv_data = bv.data();
         size_ = bv.size();
+        uint64_t blocks = size_ / block_width + (size_ % block_width ? 1 : 0);
         uint64_t block = 0;
         uint64_t offset = 0;
-        uint64_t tranition_blocks = 0;
-        uint64_t total_blocks = 0;
-        uint64_t blocks = size_ / block_width + (size_ % block_width ? 1 : 0);
+        while (blocks--) {
+            uint64_t elem = bv_data[block++];
+            uint16_t p = __builtin_popcountll(elem);
+            sum_ += p;
+            offset += widths[p];
+        }
+
+        uint64_t v_siz = size_ / (k * block_width);
+        v_siz += (size_ % (k * block_width)) > 0;
+        data_typ = sdsl::int_vector<>(size_ / block_width + (size_ % block_width > 0), 0, k_width);
+        data_val = sdsl::bit_vector(offset);
+        meta_point = sdsl::int_vector<>(v_siz, 0, 64 - __builtin_clzll(size_));
+        meta_rank = sdsl::int_vector<>(v_siz, 0, 64 - __builtin_clzll(sum_));
+
+        block = 0;
+        sum_ = 0;
+        offset = 0;
+        blocks = size_ / block_width + (size_ % block_width ? 1 : 0);
+        uint64_t s_block = 0;
         while (blocks--) {
             if (block % k == 0) {
-                meta.push_back({offset, sum_});
+                assert(meta_point.size() > s_block);
+                meta_point[s_block] = offset;
+                assert(meta_rank.size() > s_block);
+                meta_rank[s_block++] = sum_;
             }
-            uint64_t elem = bv_data[block++];
-            {
-                ++total_blocks;
-                uint16_t p = __builtin_popcountll(elem);
-                if (p == 0 || p == 64) {
-                    ++tranition_blocks;
-                } else {
-                    uint64_t m1 = (uint64_t(1) << p) - 1;
-                    uint64_t m2 = ~((uint64_t(1) << (64 - p)) - 1);
-                    if (elem == m1) {
-                        ++tranition_blocks;
-                    } else if (elem == m2) {
-                        ++tranition_blocks;
-                    }
-                }
-            }
+            uint64_t elem = bv_data[block];
             auto enc = coder.encode(elem);
             // std::cerr << std::bitset<64>(elem) << " -> " << enc.first << ", "
             // << enc.second << std::endl;
             sum_ += enc.first;
-            data.append(enc.first, offset, k_width);
-            offset += k_width;
-            data.append(enc.second, offset, widths[enc.first]);
+            assert(data_typ.size() > block);
+            data_typ[block++] = enc.first;
+            data_val.set_int(offset, enc.second, widths[enc.first]);
             // std::cerr << "                -> " << widths[enc.first] <<
             // std::endl;
             offset += widths[enc.first];
         }
-        //std::cerr << tranition_blocks << " of " << total_blocks << " (" << double(tranition_blocks) / total_blocks << ") are transition blocks" << std::endl;
     }
 
     bool access(uint64_t i) const {
@@ -499,17 +452,16 @@ class h0_bv {
         uint64_t s_block = block / k;
         uint16_t b_offset = block % k;
         i %= block_width;
-        uint64_t offset = meta[s_block].first;
+        uint64_t offset = meta_point[s_block];
         for (uint64_t j = 0; j < k; ++j) {
             if (b_offset == j) {
                 break;
             }
-            auto bk = data.read(offset, k_width);
-            offset += k_width + widths[bk];
+            auto bk = data_typ[s_block * k + j];
+            offset += widths[bk];
         }
-        auto bk = data.read(offset, k_width);
-        offset += k_width;
-        auto f = data.read(offset, widths[bk]);
+        auto bk = data_typ[block];
+        auto f = data_val.get_int(offset, widths[bk]);
         return coder.access(bk, f, i);
     }
 
@@ -518,43 +470,42 @@ class h0_bv {
         uint64_t s_block = block / k;
         uint16_t b_offset = block % k;
         i %= block_width;
-        uint64_t offset = meta[s_block].first;
-        uint64_t prefix_rank = meta[s_block].second;
+        uint64_t offset = meta_point[s_block];
+        uint64_t prefix_rank = meta_rank[s_block];
         for (uint64_t j = 0; j < k; ++j) {
             if (b_offset == j) {
                 break;
             }
-            auto bk = data.read(offset, k_width);
+            auto bk = data_typ[s_block * k + j];
             prefix_rank += bk;
-            offset += k_width + widths[bk];
+            offset += widths[bk];
         }
-        auto bk = data.read(offset, k_width);
-        offset += k_width;
-        auto f = data.read(offset, widths[bk]);
+        auto bk = data_typ[block];
+        auto f = data_val.get_int(offset, widths[bk]);
         return prefix_rank + coder.rank(bk, f, i);
     }
 
     uint64_t select(uint64_t s) const {
         uint64_t a = 0;
-        uint64_t b = meta.size() - 1;
+        uint64_t b = meta_point.size() - 1;
         while (a < b) {
             uint64_t m = (a + b + 1) / 2;
-            if (meta[m].second >= s) {
+            if (meta_rank[m] >= s) {
                 b = m - 1;
             } else {
                 a = m;
             }
         }
-        uint64_t offset = meta[a].first;
-        s -= meta[a].second;
+        uint64_t offset = meta_point[a];
+        s -= meta_rank[a];
         uint64_t res = k * a * block_width;
         uint16_t bk = 0;
         uint64_t f = 0;
+        uint64_t block = a * k;
         for (uint16_t i = 0; i < k; ++i) {
-            bk = data.read(offset, k_width);
-            offset += k_width;
+            bk = data_typ[block++];
             if (bk >= s) {
-                f = data.read(offset, widths[bk]);
+                f = data_val.get_int(offset, widths[bk]);
                 break;
             }
             offset += widths[bk];
@@ -567,7 +518,8 @@ class h0_bv {
     uint64_t size() const { return size_; }
 
     uint64_t bytes_size() const {
-        return sizeof(h0_bv) + meta.size() * 16 + data.bytes_size();
+        return sizeof(h0_bv) + sdsl::size_in_bytes(meta_point) + sdsl::size_in_bytes(meta_rank) + 
+                               sdsl::size_in_bytes(data_typ) + sdsl::size_in_bytes(data_val);
     }
 };
 
