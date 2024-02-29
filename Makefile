@@ -16,7 +16,7 @@ sdsl_comp: sdsl_comp.cpp h0_it.hpp internal.hpp
 	g++ $(CFLAGS) -DNDEBUG -Ofast -isystem ~/include -L ~/lib -o sdsl_comp sdsl_comp.cpp -lsdsl
 
 poke: internal.hpp poke.cpp h0_it.hpp
-	g++ $(CFLAGS) -g -O0 -isystem ~/include -L ~/lib -o poke poke.cpp -lsdsl
+	g++ $(CFLAGS) -Ofast -DNDEBUG -isystem ~/include -L ~/lib -o poke poke.cpp -lsdsl
 
 clean:
 	rm -f binoms binomials build

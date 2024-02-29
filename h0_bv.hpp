@@ -376,7 +376,7 @@ class mults {
 };
 
 template <uint16_t b>
-const constexpr std::array<uint64_t, b + 1> f_widhts() {
+const constexpr std::array<uint8_t, b + 1> f_widhts() {
     std::array<uint64_t, b + 1> ret;
     auto bins = binoms<b>();
     for (uint16_t i = 0; i <= b; ++i) {

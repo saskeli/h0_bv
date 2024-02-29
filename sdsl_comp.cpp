@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     using std::chrono::high_resolution_clock;
     using std::chrono::nanoseconds;
 #endif
-    h0::h0_bv<> rrr_bv(bv);
+    h0::h0_bv63<> rrr_bv(bv);
     uint64_t tot = rs.rank(bv.size());
     std::cout << "created necessary " << bv.size() << "-bit structures with " << tot << " 1-bits" << std::endl;
 
