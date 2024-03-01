@@ -202,14 +202,15 @@ constexpr std::array<std::array<uint64_t, b / 2>, b + 1> f_lims() {
 }
 
 template <uint16_t b>
-constexpr std::array<std::array<uint64_t, 8 + 1>, b + 1> f_lims_it() {
-    std::array<std::array<uint64_t, 8 + 1>, b + 1> ret;
-    auto bins_s = binoms<b - 8>();
-    auto bins_p = binoms<8>();
+constexpr std::array<std::array<uint64_t, 9>, b + 1> f_lims_it() {
+    const constexpr uint16_t bw = b == 63 ? 7 : 8;
+    std::array<std::array<uint64_t, 9>, b + 1> ret;
+    auto bins_s = binoms<b - bw>();
+    auto bins_p = binoms<bw>();
     for (uint16_t k = 0; k <= b; ++k) {
         ret[k][0] = 0;
-        for (uint16_t i = 0; i < 8; ++i) {
-            if (k > b - 8 && i < (k - (b - 8))) {
+        for (uint16_t i = 0; i < bw; ++i) {
+            if (k > b - bw && i < (k - (b - bw))) {
                 ret[k][i + 1] = 0;
             } else if (i > k) {
                 ret[k][i + 1] = ret[k][i];
@@ -217,6 +218,9 @@ constexpr std::array<std::array<uint64_t, 8 + 1>, b + 1> f_lims_it() {
                 ret[k][i + 1] = ret[k][i];
                 ret[k][i + 1] += bins_p[i] * bins_s[k - i];
             }
+        }
+        if constexpr (b == 63) {
+            ret[k][8] = std::numeric_limits<uint64_t>::max();
         }
     }
     return ret;

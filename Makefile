@@ -12,10 +12,10 @@ CFLAGS = -std=c++2b -Wall -Wextra -Wshadow -pedantic -march=native -DCACHE_LINE=
 binoms: binoms.cpp h0_bv.hpp
 	g++ $(CFLAGS) -DNDEBUG -Ofast -o binoms binoms.cpp
 
-sdsl_comp: sdsl_comp.cpp h0_it.hpp internal.hpp
+sdsl_comp: sdsl_comp.cpp h0_it.hpp internal.hpp h0_63.hpp
 	g++ $(CFLAGS) -DNDEBUG -Ofast -isystem ~/include -L ~/lib -o sdsl_comp sdsl_comp.cpp -lsdsl
 
-poke: internal.hpp poke.cpp h0_it.hpp
+poke: internal.hpp poke.cpp h0_it.hpp h0_63.hpp
 	g++ $(CFLAGS) -Ofast -DNDEBUG -isystem ~/include -L ~/lib -o poke poke.cpp -lsdsl
 
 clean:
