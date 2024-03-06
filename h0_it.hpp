@@ -65,35 +65,27 @@ class mults {
             uint64_t tot = 0;
             if constexpr (b == 64) {
                 tot += f_lim64[k][kp];
-            } else if constexpr (b == 56) {
-                tot += f_lim56[k][kp];
-            } else if constexpr (b == 48) {
-                tot += f_lim48[k][kp];
-            } else if constexpr (b == 40) {
-                tot += f_lim40[k][kp];
-            } else if constexpr (b == 32) {
-                tot += f_lim32[k][kp];
-            } else if constexpr (b == 24) {
-                tot += f_lim24[k][kp];
-            } else {
-                tot += f_lim16[k][kp];
-            }
-
-            if constexpr (b == 64) {
                 tot += fp * b56[ks];
             } else if constexpr (b == 56) {
+                tot += f_lim56[k][kp];
                 tot += fp * b48[ks];
             } else if constexpr (b == 48) {
+                tot += f_lim48[k][kp];
                 tot += fp * b40[ks];
             } else if constexpr (b == 40) {
+                tot += f_lim40[k][kp];
                 tot += fp * b32[ks];
             } else if constexpr (b == 32) {
+                tot += f_lim32[k][kp];
                 tot += fp * b24[ks];
             } else if constexpr (b == 24) {
+                tot += f_lim24[k][kp];
                 tot += fp * b16[ks];
             } else {
+                tot += f_lim16[k][kp];
                 tot += fp * b8[ks];
             }
+
             tot += fs;
             // std::cerr << b << " f: " << tot << std::endl;
             return tot;
@@ -129,8 +121,8 @@ class mults {
         uint64_t f_lim;
 
         if (f == 0) {
-            if (k == block_width) {
-                return ~uint64_t(0)
+            if (k == n) {
+                return ~uint64_t(0);
             }
             return (uint64_t(1) << k) - 1;
         }
@@ -140,8 +132,8 @@ class mults {
         if (k == 1) {
             return uint64_t(1) << f;
         }
-        if (k == (b - 1)) {
-            return ~(uint64_t(1) << (63 - f))
+        if (k == (n - 1)) {
+            return ~(uint64_t(1) << (63 - f));
         }
 
         bs(f_lim64[k], kp, f_lim, f);

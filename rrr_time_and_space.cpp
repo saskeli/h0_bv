@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <sdsl/rrr_vector.hpp>
+#include "counters.hpp"
 #ifdef HACK
 #include "h0_bv.hpp"
 #endif
@@ -96,6 +97,7 @@ int main(int argc, char* argv[])
         uint16_t k = atoi(argv[2]);
         auto start = timer::now();
         rrr_vec_type rrr_vector(bv);
+        Counters<1> count;
         util::clear(bv);
 #ifndef HACK
         rrr_select_type rrr_sel(&rrr_vector);
@@ -124,11 +126,19 @@ int main(int argc, char* argv[])
         uint64_t mask = 0;
         uint64_t check = 0;
         int_vector<64> rands = util::rnd_positions<int_vector<64>>(20, mask, rrr_vector.size(), 17);
+        count.reset();
         start = timer::now();
         check = test_random_access(rrr_vector, rands, mask, reps);
         stop = timer::now();
+        count.accumulate(0);
         cout << "# access_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
         cout << "# access_check = " << check << endl;
+        auto c = count.get(0);
+        std::cout << "Cycles:       " << c[0] << " (" << double(c[0]) / reps << ")" << "\n"
+                  << "Instructions: " << c[1] << " (" << double(c[1]) / reps << ")" << "\n"
+                  << "IPC:          " << (double(c[1]) / c[0]) << "\n"
+                  << "Branch miss:  " << c[2] << " (" << double(c[2]) / reps << ")" << "\n"
+                  << "cache misses: " << c[3] << " (" << double(c[3]) / reps << ")" << std::endl;
         rands = util::rnd_positions<int_vector<64>>(20, mask, rrr_vector.size()+1, 17);
         start = timer::now();
 #ifndef HACK

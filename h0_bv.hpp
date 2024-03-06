@@ -51,31 +51,17 @@ class mults {
         uint64_t fp = encode<b / 2>(kp, bv >> (b / 2));
         uint64_t fs = encode<b / 2>(ks, bvs);
         uint64_t tot = 0;
-        uint16_t start = k > (b / 2) ? k - (b / 2) : 0;
-        for (uint16_t i = start; i < b; ++i) {
-            if (i == kp) {
-                break;
-            }
-            if constexpr (b == 64) {
-                tot += b32[i] * b32[k - i];
-            } else if constexpr (b == 32) {
-                tot += b16[i] * b16[k - i];
-            } else {
-                // std::cerr << "tot " << tot << " -> ";
-                tot += b8[i] * b8[k - i];
-                // std::cerr << tot << std::endl;
-            }
-        }
-
         if constexpr (b == 64) {
+            tot += f_lim64[k][kp];
             tot += fp * b32[ks];
         } else if constexpr (b == 32) {
+            tot += f_lim32[k][kp];
             tot += fp * b16[ks];
         } else {
-            // std::cerr << "tot " << tot << " inc to ";
+            tot += f_lim16[k][kp];
             tot += fp * b8[ks];
-            // std::cerr << tot << std::endl;
         }
+
         tot += fs;
         // std::cerr << b << " f: " << tot << std::endl;
         return tot;
@@ -377,7 +363,7 @@ class mults {
 
 template <uint16_t b>
 const constexpr std::array<uint8_t, b + 1> f_widhts() {
-    std::array<uint64_t, b + 1> ret;
+    std::array<uint8_t, b + 1> ret;
     auto bins = binoms<b>();
     for (uint16_t i = 0; i <= b; ++i) {
         ret[i] = 64 - __builtin_clzll(bins[i] - 1);
