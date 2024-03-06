@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include "h0_it.hpp"
+#include "h0_bv.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

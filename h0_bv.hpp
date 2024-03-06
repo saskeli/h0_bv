@@ -51,14 +51,26 @@ class mults {
         uint64_t fp = encode<b / 2>(kp, bv >> (b / 2));
         uint64_t fs = encode<b / 2>(ks, bvs);
         uint64_t tot = 0;
+        uint16_t start = k > (b / 2) ? k - (b / 2) : 0;
+        for (uint16_t i = start; i < b; ++i) {
+            if (i == kp) {
+                break;
+            }
+            if constexpr (b == 64) {
+                tot += b32[i] * b32[k - i];
+            } else if constexpr (b == 32) {
+                tot += b16[i] * b16[k - i];
+            } else {
+                // std::cerr << "tot " << tot << " -> ";
+                tot += b8[i] * b8[k - i];
+                // std::cerr << tot << std::endl;
+            }
+        }
         if constexpr (b == 64) {
-            tot += f_lim64[k][kp];
             tot += fp * b32[ks];
         } else if constexpr (b == 32) {
-            tot += f_lim32[k][kp];
             tot += fp * b16[ks];
         } else {
-            tot += f_lim16[k][kp];
             tot += fp * b8[ks];
         }
 
@@ -154,17 +166,35 @@ class mults {
         if constexpr (b == 8) {
             return byte_mapping<>::f_byte(k, f);
         }
-        if (k == b) {
+        if (f == 0) {
             if constexpr (b == 64) {
-                return ~uint64_t(0);
-            } else {
-                return (uint64_t(1) << b) - 1;
+                if (k == 64) {
+                    return ~uint64_t(0);
+                }
             }
-        } else if (k == 0) {
-            return 0;
-        } else if (k == 1) {
+            return (uint64_t(1) << k) - 1;
+        }
+        if constexpr (b == 64) {
+            if (f == b64[k] - 1) {
+                return ~((uint64_t(1) << (64 - k)) - 1);
+            }
+        }
+        if constexpr (b == 32) {
+            if (f == b32[k] - 1) {
+                return ~((uint32_t(1) << (32 - k)) - 1);
+            }
+        }
+        if constexpr (b == 16) {
+            if (f == b16[k] - 1) {
+                uint16_t ret = ~((uint16_t(1) << (16 - k)) - 1);
+                //std::cerr << std::bitset<64>(ret) << " b16 last k = " << k << std::endl;
+                return ret;
+            }
+        }
+        if (k == 1) {
             return uint64_t(1) << f;
-        } else if (k == b - 1) {
+        } 
+        if (k == b - 1) {
             if (b == 64) {
                 return (~uint64_t(0)) ^ (uint64_t(1) << (b - f - 1));
             } else {
