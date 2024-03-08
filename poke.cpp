@@ -3,7 +3,7 @@
 
 #include <sdsl/bit_vectors.hpp>
 
-#include "h0_bv.hpp"
+#include "h0_63.hpp"
 
 
 int main(int argc, char const *argv[]) {
@@ -17,6 +17,8 @@ int main(int argc, char const *argv[]) {
         } else {
             std::cout << "sdsl bv load done" << std::endl;
         }
+        sdsl::rank_support_v rs(&bv);
+        sdsl::select_support_mcl ss(&bv);
         h0::h0_bv h0bv(bv);
 
         if (argc > 2) {
@@ -37,15 +39,36 @@ int main(int argc, char const *argv[]) {
         }
         
 
-        for (uint32_t i = 0; i < bv.size(); ++i) {
+        for (uint64_t i = 0; i < bv.size(); ++i) {
             bool cont = bv[i];
             bool res = h0bv.access(i);
             if (cont != res) {
                 std::cerr << i << " should be " << cont << ", but is " << res << std::endl;
                 exit(1);
             }
+            auto c_count = rs.rank(i);
+            auto r_count = h0bv.rank(i);
+            if (c_count != r_count) {
+                std::cerr << "rank(" << i << ") should be " << c_count << ", but is " << r_count << std::endl;
+                exit(1);
+            }
+            if (i > 0 && (i % 10000000) == 0) {
+                std::cout << i << "... ok\r" << std::flush;
+            }
         }
-        std::cerr << "OK!?!?!?!?" << std::endl;
+        auto lim = rs(bv.size() - 1);
+        for (uint64_t i = 1; i < lim; ++i) {
+            auto cont = ss.select(i);
+            auto res = h0bv.select(i);
+            if (cont != res) {
+                std::cerr << "select(" << i << ") should be " << cont << ", but is " << res << std::endl;
+                exit(1);
+            }
+            if (i > 0 && (i % 10000000) == 0) {
+                std::cout << i << "... ok              \r" << std::flush;
+            }
+        }
+        std::cerr << "\nOK!?!?!?!?" << std::endl;
         exit(0);
     }
 
