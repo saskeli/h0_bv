@@ -3,7 +3,7 @@
 
 #include <sdsl/bit_vectors.hpp>
 
-#include "h0_63.hpp"
+#include "h0_bv.hpp"
 
 
 int main(int argc, char const *argv[]) {

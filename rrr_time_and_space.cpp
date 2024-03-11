@@ -49,7 +49,10 @@ uint64_t test_inv_random_access(const t_vec& v, const int_vector<64>& rands, uin
 {
     uint64_t cnt=0;
     for (uint64_t i=0; i<times; ++i) {
-        cnt += v(rands[ i&mask ]);
+        auto val = v(rands[i & mask]);
+        /*if (i < 15)
+                std::cerr << i << ", " << rands[i & mask] << ": " << val << std::endl;*/
+        cnt += val;
     }
     return cnt;
 }
@@ -68,7 +71,10 @@ uint64_t test_select(const t_vec& v, const int_vector<64>& rands, uint64_t mask,
 {
     uint64_t cnt=0;
     for (uint64_t i=0; i<times; ++i) {
-        cnt += v.select(rands[ i&mask ]);
+        auto val = v.select(rands[i & mask]);
+        /*if (i < 15)
+                std::cerr << i << ", " << rands[i & mask] << ": " << val << std::endl;*/
+        cnt += val;
     }
     return cnt;
 }

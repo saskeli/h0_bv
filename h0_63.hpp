@@ -386,6 +386,9 @@ class h0_bv {
     }
 
     uint64_t rank(uint64_t i) const {
+        if (i >= size_) [[unlikely]] {
+            return sum_;
+        }
         uint64_t block = i / block_width;
         uint64_t s_block = block / k;
         uint16_t b_offset = block % k;
