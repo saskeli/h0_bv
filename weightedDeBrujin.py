@@ -93,17 +93,43 @@ def weighted_deBrujin_seq(starts):
 def cpp_header(n):
     print("""#include <array>
 #include <cstdint>
+#include <endian.h>
 
-static const constexpr class {""")
+#include "internal.hpp"
+
+class wdbs {""")
     max_pop = n // 2
-    arr_size = 0
-    offsets = []
+    offsets = [0, ceil(n / 8)]
+    arr_size = offsets[-1] + ceil((n * 2 - 1) / 8)
     for i in range(2, max_pop + 1):
         offsets.append(arr_size)
         arr_size += ceil((comb(n, i) + n - 1) / 8)
     
-    print(f"    std::array<uint8_t, {arr_size}> data = {'{'}", end="")
+    print(f"    static const constexpr std::array<uint8_t, {arr_size}> data = {'{'}", end="")
     arridx = 0
+
+    zero_seq = "0" * n
+    zero_blocks = ceil(len(zero_seq) / 8)
+    for j in range(zero_blocks):
+        if arridx % 10 == 0:
+            print("\n        ", end="")
+        block = zero_seq[8 * j:8 * j + 8]
+        if j == zero_blocks - 1:
+            block += "0" * (8 - len(block))
+        print(f"{int(block, 2)}u, ", end="")
+        arridx += 1
+
+    one_seq = "0" * (n - 1) + "1" + "0" * (n - 2)
+    one_blocks = ceil(len(one_seq) / 8)
+    for j in range(one_blocks):
+        if arridx % 10 == 0:
+            print("\n        ", end="")
+        block = one_seq[8 * j:8 * j + 8]
+        if j == one_blocks - 1:
+            block += "0" * (8 - len(block))
+        print(f"{int(block, 2)}u, ", end="")
+        arridx += 1
+        
     for i in range(2, max_pop + 1):
         ins = weighted_deBrujin_seq("0" * (n - i) + "1" * i)
         blocks = ceil(len(ins) / 8)
@@ -113,30 +139,40 @@ static const constexpr class {""")
             block = ins[8 * j:8 * j + 8]
             if j == blocks - 1:
                 block += "0" * (8 - len(block))
-            print(f"{int(block[::-1], 2)}u", end="")
+            print(f"{int(block, 2)}u", end="")
             print("};\n" if i == max_pop and j == blocks - 1 else ", ", end="")
             arridx += 1
     
-    print(f"    std::array<uint32_t, {len(offsets)}> offs = {'{'}{', '.join(str(v) for v in offsets)}{'}'};")
+    print(f"    static const constexpr std::array<uint32_t, {len(offsets)}> offs = {'{'}{', '.join(str(v) for v in offsets)}{'}'};")
 
     print("   public:")
-    print("    uint32_t decode(uint16_t C, uint32_t off) const {")
+    print("    static const constexpr uint32_t decode(uint16_t C, uint32_t off) {")
     print(f"        const constexpr uint32_t mask = (uint32_t(1) << {n}) - 1;")
-    print("        uint32_t idx = off / 8 + offs[C - 2];")
+    print("        uint32_t idx = off / 8 + offs[C];")
     print("        off %= 8;")
-    print("        uint64_t w = reinterpret_cast<const uint64_t*>(data.data() + idx)[0];")
-    print("        w = (w >> off) & mask;")
+    print("        uint64_t w = be64toh(reinterpret_cast<const uint64_t*>(data.data() + idx)[0]);")
+    print(f"        w = (w >> ({64 - n} - off)) & mask;")
     print("        w ^= (C - __builtin_popcountll(w)) & uint64_t(1);")
     print("        return w;")
     print("    }\n")
-    print("    std::pair<uint8_t*, uint32_t> get_arr(uint16_t C) {")
-    print("        C -= 2;")
-    print("        uint8_t* ptr = data.data() + offs[C];")
-    print("        uint32_t size = C == offs.size() - 2 ? data.size() : offs[C];")
+    print("    static const constexpr std::pair<const uint8_t*, uint32_t> get_arr(uint16_t C) {")
+    print("        const uint8_t* ptr = data.data() + offs[C];")
+    print("        uint32_t size = C == offs.size() - 1 ? data.size() : offs[C];")
     print("        size -= offs[C];")
     print("        return {ptr, size};")
     print("    }")
-    print("} wbds;")
+    print("};")
+
+    print("""constexpr std::array<uint8_t, 256> encode_array() {
+    auto bin = binoms<8>();
+    std::array<uint8_t, 256> ret;
+    for (uint16_t C = 0; C <= 4; ++C) {
+        for (uint16_t off = 0; off < bin[C]; ++off) {
+            ret[wdbs::decode(C, off)] = off;
+        }
+    }
+    return ret;
+}""")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
