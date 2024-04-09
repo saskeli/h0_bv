@@ -1,19 +1,41 @@
 #!/bin/bash
 
 defs=(
-    "15 32 SDSL"
-    "31 32 SDSL"
-    "63 32 SDSL"
-    "15 32 RRR15"
-    "64 32 HACK=\"h0_bv.hpp\""
-    "63 32 HACK=\"h0_63.hpp\""
-    "64 32 HACK=\"h0_it.hpp\""
-    "15 32 HACK=\"wdbs15.hpp\""
-    "24 32 HACK=\"wdbs24.hpp\""
-    "15 32 HACK=\"h0_gap.hpp\""
-    "24 32 HACK=\"h0_gap.hpp\""
+    SDSL_15_32_OP
+    SDSL_31_32_OP
+    SDSL_63_32_OP
+    H0R_64_32_OP
+    H0I_63_32_OP
+    H0I_64_32_OP
+    SDSL_15_32
+    SDSL_31_32
+    SDSL_63_32
+    H0R_64_32
+    H0I_63_32
+    H0I_64_32
+    RRR_15_32
+    H0GAP_15_32
+    H0GAP_24_32
+    H0WDBS_15_32
+    H0WDBS_24_32
 )
 
-for 
+data=(
+    rnd_50.16MB
+    WT-DNA-1GB
+    WT-WEB-1GB
+)
 
-g++ -std=c++2b -march=native -Ofast -isystem -DNDEBUG $defs ~/include -L ~/lib -o rrr_time_and_space rrr_time_and_space.cpp -lsdsl
+mkdir -p res
+
+make bins
+
+for DS in ${data[@]};
+do
+    echo "tests for ${DS}"
+    for TYPE in ${defs[@]};
+    do
+        echo "      ${TYPE}"
+        ./${TYPE} ${1}${DS} 32 > res/${TYPE}_${DS}.txt
+    done
+done

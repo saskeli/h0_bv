@@ -36,3 +36,6 @@ __pycache__/
 
 # generated headers
 wdbs*.hpp
+
+# results
+res/
