@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include "h0_bv.hpp"
+#include "h0_gap.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     using std::chrono::high_resolution_clock;
     using std::chrono::nanoseconds;
 #endif
-    h0::h0_bv<> rrr_bv(bv);
+    h0::h0_gap<32, 24, 24> rrr_bv(bv);
     uint64_t tot = rs.rank(bv.size());
     std::cout << "created necessary " << bv.size() << "-bit structures with " << tot << " 1-bits" << std::endl;
 

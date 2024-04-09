@@ -1,10 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <sdsl/rrr_vector.hpp>
-#include "counters.hpp"
+#include <sdsl/bit_vectors.hpp>
+
 #ifdef HACK
-#include "h0_bv.hpp"
+    #include HACK
+#elif defined RRR15
+    #include <sdsl/rrr_vector_15.hpp>
 #endif
 
 using namespace std;
@@ -34,29 +36,16 @@ uint64_t test_random_access(const t_vec& v, const int_vector<64>& rands, uint64_
 {
     uint64_t cnt=0;
     for (uint64_t i=0; i<times; ++i) {
-#ifndef HACK
-        cnt += v[rands[ i&mask ]];
+#ifdef HACK
+        cnt += v.access(rands[i&mask]);
 #else
-        cnt += v.access(rands[i & mask]);
+        cnt += v[rands[ i&mask ]];
 #endif
     }
     return cnt;
 }
 
-#ifndef HACK
-template<class t_vec>
-uint64_t test_inv_random_access(const t_vec& v, const int_vector<64>& rands, uint64_t mask, uint64_t times=100000000)
-{
-    uint64_t cnt=0;
-    for (uint64_t i=0; i<times; ++i) {
-        auto val = v(rands[i & mask]);
-        /*if (i < 15)
-                std::cerr << i << ", " << rands[i & mask] << ": " << val << std::endl;*/
-        cnt += val;
-    }
-    return cnt;
-}
-#else 
+#ifdef HACK
 template<class t_vec>
 uint64_t test_rank(const t_vec& v, const int_vector<64>& rands, uint64_t mask, uint64_t times=100000000)
 {
@@ -66,19 +55,26 @@ uint64_t test_rank(const t_vec& v, const int_vector<64>& rands, uint64_t mask, u
     }
     return cnt;
 }
+
 template<class t_vec>
 uint64_t test_select(const t_vec& v, const int_vector<64>& rands, uint64_t mask, uint64_t times=100000000)
 {
     uint64_t cnt=0;
     for (uint64_t i=0; i<times; ++i) {
-        auto val = v.select(rands[i & mask]);
-        /*if (i < 15)
-                std::cerr << i << ", " << rands[i & mask] << ": " << val << std::endl;*/
-        cnt += val;
+        cnt += v.select(rands[ i&mask ]);
     }
     return cnt;
 }
-
+#else
+template<class t_vec>
+uint64_t test_inv_random_access(const t_vec& v, const int_vector<64>& rands, uint64_t mask, uint64_t times=100000000)
+{
+    uint64_t cnt=0;
+    for (uint64_t i=0; i<times; ++i) {
+        cnt += v(rands[ i&mask ]);
+    }
+    return cnt;
+}
 #endif
 
 int main(int argc, char* argv[])
@@ -90,12 +86,22 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-#ifndef HACK
-    typedef rrr_vector<BLOCK_SIZE, int_vector<>, RANK_SAMPLE_DENS> rrr_vec_type;
+#ifdef HACK
+    #ifndef CLASSNAME
+        static_assert(false);
+    #endif
+    typedef CLASSNAME rrr_vec_type;
+#elif defined HYB
+    typedef hyb_vector<> rrr_vec_type;
+    typedef rrr_vec_type::rank_1_type rrr_select_type;
+#elif defined RRR15
+    typedef rrr_vector<15, int_vector<>, RANK_SAMPLE_DENS> rrr_vec_type;
     typedef rrr_vec_type::select_1_type rrr_select_type;
     typedef rrr_vec_type::rank_1_type rrr_rank_type;
 #else
-    typedef h0::h0_bv<32> rrr_vec_type;
+    typedef rrr_vector<BLOCK_SIZE, int_vector<>, RANK_SAMPLE_DENS> rrr_vec_type;
+    typedef rrr_vec_type::select_1_type rrr_select_type;
+    typedef rrr_vec_type::rank_1_type rrr_rank_type;
 #endif
     bit_vector bv;
     if (load_from_file(bv, argv[1])) {
@@ -103,54 +109,45 @@ int main(int argc, char* argv[])
         uint16_t k = atoi(argv[2]);
         auto start = timer::now();
         rrr_vec_type rrr_vector(bv);
-        Counters<1> count;
         util::clear(bv);
 #ifndef HACK
+#ifndef HYB
         rrr_select_type rrr_sel(&rrr_vector);
+#endif
         rrr_rank_type   rrr_rank(&rrr_vector);
 #endif
         auto stop = timer::now();
         cout << "# construct_time = " << duration_cast<milliseconds>(stop-start).count() << endl;
-#ifndef HACK
-        rrr_vec_type::size_type args = rrr_rank(rrr_vector.size());
+#ifdef HACK
+        uint64_t args = rrr_vector.rank(rrr_vector.size());
 #else
-        auto args = rrr_vector.rank(rrr_vector.size());
+        rrr_vec_type::size_type args = rrr_rank(rrr_vector.size());
 #endif
         cout << "# rrr_vector.size() = " << rrr_vector.size() << endl;
         cout << "# args = " << args << endl;
         cout << "# file_name = "  << argv[1] << endl;
         cout << "# block_size = " << BLOCK_SIZE << endl;
         cout << "# sample_rate = "<< k << endl;
-#ifndef HACK
-        cout << "# rrr_size = "   << size_in_bytes(rrr_vector) << endl;
-        cout << "# bt_size = "    << size_in_bytes(rrr_vector.bt) << endl;
-        cout << "# btnr_size = "  << size_in_bytes(rrr_vector.btnr) << endl;
+#ifdef HACK
+        cout << "# rrr_size = "   << rrr_vector.bytes_size() << endl;
 #else
-        cout << "# h0_bv_size = " << rrr_vector.bytes_size() << endl;
+        cout << "# rrr_size = "   << size_in_bytes(rrr_vector) << endl;
 #endif
         const uint64_t reps = 10000000;
         uint64_t mask = 0;
         uint64_t check = 0;
         int_vector<64> rands = util::rnd_positions<int_vector<64>>(20, mask, rrr_vector.size(), 17);
-        count.reset();
         start = timer::now();
         check = test_random_access(rrr_vector, rands, mask, reps);
         stop = timer::now();
-        count.accumulate(0);
         cout << "# access_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
         cout << "# access_check = " << check << endl;
-        auto c = count.get(0);
-        std::cout << "Cycles:       " << c[0] << " (" << double(c[0]) / reps << ")" << "\n"
-                  << "Instructions: " << c[1] << " (" << double(c[1]) / reps << ")" << "\n"
-                  << "IPC:          " << (double(c[1]) / c[0]) << "\n"
-                  << "Branch miss:  " << c[2] << " (" << double(c[2]) / reps << ")" << "\n"
-                  << "cache misses: " << c[3] << " (" << double(c[3]) / reps << ")" << std::endl;
         rands = util::rnd_positions<int_vector<64>>(20, mask, rrr_vector.size()+1, 17);
         start = timer::now();
-#ifndef HACK
-        check = test_inv_random_access(rrr_rank, rands, mask, reps);
-#else
+#ifdef HACK
         check = test_rank(rrr_vector, rands, mask, reps);
+#else
+        check = test_inv_random_access(rrr_rank, rands, mask, reps);
 #endif
         stop = timer::now();
         cout << "# rank_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
@@ -158,10 +155,12 @@ int main(int argc, char* argv[])
         rands = util::rnd_positions<int_vector<64>>(20, mask, args, 17);
         for (uint64_t i=0; i<rands.size(); ++i) rands[i] = rands[i]+1;
         stop = timer::now();
-#ifndef HACK
-        check = test_inv_random_access(rrr_sel, rands, mask, reps);
-#else
+#ifdef HACK
         check = test_select(rrr_vector, rands, mask, reps);
+#else
+#ifndef HYB
+        check = test_inv_random_access(rrr_sel, rands, mask, reps);
+#endif
 #endif
         stop = timer::now();
         cout << "# select_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;

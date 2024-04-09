@@ -166,6 +166,7 @@ class mults {
         if constexpr (b == 8) {
             return byte_mapping<>::f_byte(k, f);
         }
+#ifndef RRR_NO_OPT
         if (f == 0) {
             if constexpr (b == 64) {
                 if (k == 64) {
@@ -201,6 +202,7 @@ class mults {
                 return ((uint64_t(1) << b) - 1) ^ (uint64_t(1) << (b - f - 1));
             }
         }
+#endif
         uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;
@@ -222,6 +224,7 @@ class mults {
             auto by = byte_mapping<>::f_byte(k, f);
             return __builtin_popcount(by & ((uint16_t(1) << i) - 1));
         }
+#ifndef RRR_NO_OPT
         if (i >= b) [[unlikely]] {
             return k;
         } else if (k == 0) [[unlikely]] {
@@ -233,6 +236,7 @@ class mults {
         } else if (k == b - 1) [[unlikely]] {
             return i - uint64_t((b - f - 1) < i);
         }
+#endif
         uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;
@@ -262,6 +266,7 @@ class mults {
             uint16_t pos = uint16_t(1) << (s - 1);
             return __builtin_ctz(_pdep_u32(pos, by));
         }
+#ifdef RRR_NO_OPT
         if (k == 0) [[unlikely]] {
             return 0;
         } else if (k == b) [[unlikely]] {
@@ -271,6 +276,7 @@ class mults {
         } else if (k == b - 1) [[unlikely]] {
             return s - 1 + ((b - f - 1) < s);
         }
+#endif
         uint16_t kp = kp_f<b>(k, f);
         uint16_t ks = k - kp;
         uint64_t md;

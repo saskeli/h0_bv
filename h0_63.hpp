@@ -143,8 +143,8 @@ class mults {
         //std::cout << "decode " << k << ", " << f << std::endl;
         uint16_t kp;
         uint64_t f_lim;
+#ifndef RRR_NO_OPT
         const constexpr uint64_t mask63 = ~(uint64_t(1) << 63);
-
         if (f == 0) {
             return (uint64_t(1) << k) - 1;
         }
@@ -161,7 +161,7 @@ class mults {
             val = ~val;
             return val & mask63;
         }
-
+#endif
         bs(f_lim63[k], kp, f_lim, f);
         k -= kp;
         uint64_t md = b56[k];

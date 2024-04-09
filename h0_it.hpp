@@ -119,7 +119,7 @@ class mults {
     inline static constexpr uint64_t decode(uint16_t k, uint64_t f) {
         uint16_t kp;
         uint64_t f_lim;
-
+#ifndef RRR_NO_OPT
         if (f == 0) {
             if (k == n) {
                 return ~uint64_t(0);
@@ -135,7 +135,7 @@ class mults {
         if (k == (n - 1)) {
             return ~(uint64_t(1) << (63 - f));
         }
-
+#endif
         bs(f_lim64[k], kp, f_lim, f);
         k -= kp;
         uint64_t md = b56[k];

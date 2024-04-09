@@ -34,11 +34,8 @@ constexpr std::array<uint64_t, n + 1> binoms() {
 }
 
 constexpr uint32_t next(uint32_t v) {
-    uint32_t off = __builtin_ctzl(v);
-    uint32_t fix = __builtin_ctzl(~(v >> off)) - 1;
-    v += uint32_t(1) << off;
-    v |= (uint32_t(1) << fix) - 1;
-    return v;
+    uint32_t t = v | (v - 1);
+    return (t + 1) | (((~t & -~t) - 1) >> (__builtin_ctzl(v) + 1));  
 }
 
 template <uint8_t k, uint8_t first>
@@ -220,7 +217,7 @@ constexpr std::array<std::array<uint64_t, 9>, b + 1> f_lims_it() {
             }
         }
         if constexpr (b == 63) {
-            ret[k][8] = std::numeric_limits<uint64_t>::max();
+            ret[k][8] = ~uint64_t(0);
         }
     }
     return ret;
