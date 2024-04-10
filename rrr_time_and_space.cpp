@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     typedef CLASSNAME rrr_vec_type;
 #elif defined HYB
     typedef hyb_vector<> rrr_vec_type;
-    typedef rrr_vec_type::rank_1_type rrr_select_type;
+    typedef rrr_vec_type::rank_1_type rrr_rank_type;
 #elif defined RRR15
     typedef rrr_vector<15, int_vector<>, RANK_SAMPLE_DENS> rrr_vec_type;
     typedef rrr_vec_type::select_1_type rrr_select_type;

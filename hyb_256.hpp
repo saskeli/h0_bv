@@ -338,7 +338,7 @@ class hyb_vector
                             }*/
                             number_type nr = number_type(ptr64[0], ptr64[1], uint128_t(ptr64[2], ptr64[3]));
                             nr = rrr_helper_type::bin_to_nr(nr);
-                            rrr_helper_type::set_bt(m_trunk, trunk_offset, nr, h0_bytes * 8);
+                            rrr_helper_type::set_bt(*reinterpret_cast<int_vector<>*>(&m_trunk), trunk_offset, nr, h0_bytes * 8);
                         } else if (runs_enc_size < minority_enc_size) {
 
                             // Use runs encoding.
@@ -469,21 +469,9 @@ class hyb_vector
                 uint64_t trunk_offset = trunk_ptr * 8;
                 uint64_t b_off = 0;
                 --local_i;
-                for (uint64_t b = 0; b < 4; ++b) {
-                    uint16_t b_pop = m_trunk.get_int(trunk_offset, 6);
-                    trunk_offset += 6;
-                    uint16_t b_width = widths[b_pop];
-                    if (local_i < 64) {
-                        b_off = reinterpret_cast<const int_vector<>*>(&m_trunk)->get_int(trunk_offset, b_width);
-                        b_off = coder.decode(b_pop, b_off);
-                        b_off = special_bit ? ~b_off : b_off;
-                        b_off >>= local_i;
-                        break;
-                    }
-                    trunk_offset += b_width;
-                    local_i -= 64;
-                }
-                return b_off & uint64_t(1);
+                uint16_t enc_w = rrr_helper_type::space_for_bt(ones);
+                number_type nr = rrr_helper_type::decode_btnr(*reinterpret_cast<const int_vector<>*>(&m_trunk), trunk_offset, enc_w);
+                return rrr_helper_type::decode_bit(ones, nr, local_i);
             }
 
             // Number of runs > 2.
@@ -707,6 +695,9 @@ class rank_support_hyb
         enum { bit_pat = t_b };
         enum { bit_pat_len = (uint8_t)1 };
     private:
+        typedef bit_vector_type::rrr_helper_type rrr_helper_type;
+        typedef typename bit_vector_type::number_type number_type;
+
         const bit_vector_type* m_v;
 
 
@@ -785,22 +776,10 @@ class rank_support_hyb
                 uint64_t trunk_offset = trunk_ptr * 8;
                 uint64_t b_off = 0;
                 --local_i;
-                for (uint64_t b = 0; b < 4; ++b) {
-                    uint16_t b_pop = m_v->m_trunk.get_int(trunk_offset, 6);
-                    trunk_offset += 6;
-                    uint16_t b_width = m_v->widths[b_pop];
-                    if (local_i < 64) {
-                        b_off = reinterpret_cast<const int_vector<>*>(&(m_v->m_trunk))->get_int(trunk_offset, b_width);
-                        b_off = m_v->coder.decode(b_pop, b_off);
-                        b_off = special_bit ? ~b_off : b_off;
-                        block_rank += __builtin_popcountll(b_off & ((uint64_t(1) << local_i) - 1));
-                        break;
-                    }
-                    block_rank += special_bit ? 64 - b_pop : b_pop;
-                    trunk_offset += b_width;
-                    local_i -= 64;
-                }
-                return block_rank;
+                uint16_t enc_w = rrr_helper_type::space_for_bt(ones);
+                number_type nr = rrr_helper_type::decode_btnr(*reinterpret_cast<const int_vector<>*>(&(m_v->m_trunk)), trunk_offset, enc_w);
+                uint16_t popcnt = rrr_helper_type::decode_popcount(ones, nr, local_i);
+                return popcnt;
             }
 
             // Number of runs > 2.
