@@ -1237,6 +1237,9 @@ class rank_support_hyb
                     trunk_offset += 6;
                     uint16_t b_width = m_v->widths[b_pop];
                     if (local_i < 64) {
+                        if (local_i == 0) {
+                            break;
+                        }
                         b_off = reinterpret_cast<const int_vector<>*>(&(m_v->m_trunk))->get_int(trunk_offset, b_width);
                         b_off = m_v->coder.decode(b_pop, b_off);
                         b_off = special_bit ? ~b_off : b_off;
