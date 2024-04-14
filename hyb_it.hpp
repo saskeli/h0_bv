@@ -1231,7 +1231,6 @@ class rank_support_hyb
             if (h0) {
                 uint64_t trunk_offset = trunk_ptr * 8;
                 uint64_t b_off = 0;
-                --local_i;
                 for (uint64_t b = 0; b < 4; ++b) {
                     uint16_t b_pop = m_v->m_trunk.get_int(trunk_offset, 6);
                     trunk_offset += 6;
@@ -1250,7 +1249,7 @@ class rank_support_hyb
                     trunk_offset += b_width;
                     local_i -= 64;
                 }
-                return block_rank;
+                return rank_result<t_b>::adapt(block_rank + hblock_rank + sblock_rank, i);
             }
 
             // Number of runs > 2.

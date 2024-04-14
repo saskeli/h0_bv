@@ -328,17 +328,17 @@ class hyb_vector
                         if (h0_bytes < runs_enc_size && h0_bytes < minority_enc_size) {
                             (*header_ptr16) |= (32 + h0_bytes) << 10;
 
-                            const uint64_t* ptr64 = bv_ptr;
                             uint64_t trunk_offset = trunk_ptr * 8;
-                            /*std::cerr << "h0 encoding selected for " << block_id << " (" << block_id * 256 << " - " << block_id * 256 + 256 << ")" << std::endl;
-                            std::cerr << "     takes " << h0_bytes << " bytes with flip=" << flip << std::endl;
-                            for (uint16_t i = 0; i < 4; ++i) {
-                                std::cerr << "      " << std::bitset<64>(ptr64[i]) << std::endl;
-                                std::cerr << "      " << std::bitset<64>(bv.get_int(block_id * 256 + i * 64)) << "\n---" << std::endl;
+                            number_type bin = rrr_helper_type::decode_btnr(bv, trunk_offset, k_block_size);
+                            number_type nr = rrr_helper_type::bin_to_nr(bin);
+                            /*if (block_id == 77) {
+                                std::cerr << nr << std::endl;
+                                for (uint16_t bbb = 0; bbb < 20; ++bbb) {
+                                    std::cerr << "access(" << bbb << ") = " << rrr_helper_type::decode_bit(ones, nr, bbb) << std::endl;
+                                }
                             }*/
-                            number_type nr = number_type(ptr64[0], ptr64[1], uint128_t(ptr64[2], ptr64[3]));
-                            nr = rrr_helper_type::bin_to_nr(nr);
-                            rrr_helper_type::set_bt(*reinterpret_cast<int_vector<>*>(&m_trunk), trunk_offset, nr, h0_bytes * 8);
+                            rrr_helper_type::set_bt(*reinterpret_cast<int_vector<>*>(&m_trunk), trunk_offset, nr, rrr_helper_type::space_for_bt(ones));
+                            trunk_ptr += h0_bytes;
                         } else if (runs_enc_size < minority_enc_size) {
 
                             // Use runs encoding.
@@ -467,10 +467,13 @@ class hyb_vector
             // block is h0 encoded
             if (h0) {
                 uint64_t trunk_offset = trunk_ptr * 8;
-                uint64_t b_off = 0;
-                --local_i;
                 uint16_t enc_w = rrr_helper_type::space_for_bt(ones);
                 number_type nr = rrr_helper_type::decode_btnr(*reinterpret_cast<const int_vector<>*>(&m_trunk), trunk_offset, enc_w);
+                /*if (i >= 19712) {
+                    std::cerr << "i = " << i << ", " << local_i << std::endl;
+                    std::cerr << nr << std::endl;
+                }*/
+                --local_i;
                 return rrr_helper_type::decode_bit(ones, nr, local_i);
             }
 
@@ -775,11 +778,10 @@ class rank_support_hyb
             if (h0) {
                 uint64_t trunk_offset = trunk_ptr * 8;
                 uint64_t b_off = 0;
-                --local_i;
                 uint16_t enc_w = rrr_helper_type::space_for_bt(ones);
                 number_type nr = rrr_helper_type::decode_btnr(*reinterpret_cast<const int_vector<>*>(&(m_v->m_trunk)), trunk_offset, enc_w);
                 uint16_t popcnt = rrr_helper_type::decode_popcount(ones, nr, local_i);
-                return popcnt;
+                return rank_result<t_b>::adapt(popcnt + hblock_rank + sblock_rank + block_rank, i);
             }
 
             // Number of runs > 2.

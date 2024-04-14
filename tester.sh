@@ -13,6 +13,7 @@ defs=(
     SDSL_24_32
     SDSL_31_32
     SDSL_63_32
+    SDSL_256_32
     H0R_64_32
     H0I_63_32
     H0I_64_32
@@ -49,6 +50,12 @@ data=(
 mkdir -p res
 
 make bins
+
+if [ $? -ne 0 ]
+then
+    echo "make failure... Terminating...."
+    exit 1
+fi
 
 for DS in ${data[@]};
 do
