@@ -92,6 +92,9 @@ H0I_64_32_NOOPT: h0_it.hpp internal.hpp  rrr_time_and_space.cpp
 RRR_15_32: rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DRRR15 -o RRR_15_32 rrr_time_and_space.cpp $(ISDSL)
 
+H0GAP_15_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1>' -o H0GAP_15_32_1 rrr_time_and_space.cpp $(ISDSL)
+
 H0GAP_15_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15>' -o H0GAP_15_32_15 rrr_time_and_space.cpp $(ISDSL)
 
@@ -103,6 +106,9 @@ H0GAP_15_32_32: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 
 H0GAP_15_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 64>' -o H0GAP_15_32_64 rrr_time_and_space.cpp $(ISDSL)
+
+H0GAP_24_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1>' -o H0GAP_24_32_1 rrr_time_and_space.cpp $(ISDSL)
 
 H0GAP_24_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 15>' -o H0GAP_24_32_15 rrr_time_and_space.cpp $(ISDSL)

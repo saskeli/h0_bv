@@ -13,6 +13,7 @@ namespace internal {
 
 template <uint16_t block_size, uint16_t gap = block_size>
 class mults {
+    static_assert(gap > 0);
     typedef std::conditional<(block_size > 8), uint16_t, uint8_t>::type s_type;
     typedef std::conditional<(block_size > 16), uint32_t, s_type>::type dtype;
 
@@ -96,7 +97,7 @@ class mults {
         uint64_t idx = offset / gap;
         offset %= gap;
         uint64_t v = get(offsets[C] + idx);
-        for (uint16_t i = 0; i < gap; ++i) {
+        for (uint16_t i = 0; i < gap - 1; ++i) {
             if (i == offset) {
                 break;
             }
