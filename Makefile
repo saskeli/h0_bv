@@ -125,8 +125,14 @@ H0GAP_24_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 H0WDBS_15_32: wdbs15.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"wdbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_15_32 rrr_time_and_space.cpp $(ISDSL)
 
+H0DBS_15_32: dbs15.hpp internal.hpp rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"dbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0DBS_15_32 rrr_time_and_space.cpp $(ISDSL)
+
 H0WDBS_24_32: wdbs24.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"wdbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_24_32 rrr_time_and_space.cpp $(ISDSL)
+
+H0DBS_24_32: dbs24.hpp internal.hpp rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"dbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0DBS_24_32 rrr_time_and_space.cpp $(ISDSL)
 
 HYBSDSL_256_32: hyb_vanilla.hpp rrr_time_and_space.cpp
 	cp -f hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
