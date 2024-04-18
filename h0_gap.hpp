@@ -11,9 +11,10 @@
 namespace h0 {
 namespace internal {
 
-template <uint16_t block_size, uint16_t gap = block_size>
+template <uint16_t block_size, uint16_t gap = block_size, bool flippable = true>
 class mults {
     static_assert(gap > 0);
+    static_assert(block_size < 32);
     typedef std::conditional<(block_size > 8), uint16_t, uint8_t>::type s_type;
     typedef std::conditional<(block_size > 16), uint32_t, s_type>::type dtype;
 
@@ -21,16 +22,16 @@ class mults {
 
     static constexpr uint64_t gap_elems() {
         uint64_t acc = 0;
-        uint16_t types = (block_size + 1) / 2;
+        uint16_t types = flippable ? (block_size + 1) / 2 : block_size;
         for (uint16_t i = 0; i <= types; ++i) {
             acc += (bins[i] + gap - 1) / gap;
         }
         return acc;
     }
 
-    const static constexpr std::array<uint64_t, 1 + (block_size + 1) / 2>
+    const static constexpr std::array<uint64_t, 1 + (flippable ? (block_size + 1) / 2 : block_size)>
     goff() {
-        std::array<uint64_t, 1 + (block_size + 1) / 2> ret;
+        std::array<uint64_t, 1 + (flippable ? (block_size + 1) / 2 : block_size)> ret;
         ret[0] = 0;
         for (uint16_t i = 1; i < ret.size(); ++i) {
             ret[i] = ret[i - 1] + (bins[i - 1] + gap - 1) / gap;
@@ -43,7 +44,7 @@ class mults {
         std::fill(ret.begin(), ret.end(), 0);
         ret[0] = 0;
         uint32_t idx = 1;
-        for (uint16_t C = 1; C <= (block_size + 1) / 2; ++C) {
+        for (uint16_t C = 1; C <= (flippable ? (block_size + 1) / 2 : block_size); ++C) {
             uint32_t v = (uint32_t(1) << C) - 1;
             uint32_t elems = (bins[C] + gap - 1) / gap;
             uint64_t i = idx * block_size;
@@ -92,8 +93,11 @@ class mults {
     template<bool blah = false>
     static constexpr uint64_t decode(uint16_t C, uint64_t offset) {
         const constexpr uint64_t mask = (uint64_t(1) << block_size) - 1;
-        bool flip = C > (block_size + 1) / 2;
-        C = flip ? block_size - C : C;
+        bool flip = false;
+        if constexpr (flippable) {
+            flip = C > (block_size + 1) / 2;
+            C = flip ? block_size - C : C;
+        }
         uint64_t idx = offset / gap;
         offset %= gap;
         uint64_t v = get(offsets[C] + idx);
@@ -103,8 +107,12 @@ class mults {
             }
             v = next(v);
         }
-        v = flip ? ~v : v;
-        return v & mask;
+        if constexpr (flippable) {
+            v = flip ? ~v : v;
+            return v & mask;
+        } else {
+            return v;
+        }
     }
 
     static std::unique_ptr<dtype[]> encode_array() {
@@ -130,7 +138,7 @@ const constexpr std::array<uint8_t, b + 1> f_widths() {
 
 }  // namespace internal
 
-template <uint16_t block_size, uint16_t gap_size = block_size, uint16_t k = 32>
+template <uint16_t block_size, uint16_t gap_size = block_size, uint16_t k = 32, bool flippable = true>
 class h0_gap {
    private:
     static const constexpr internal::mults<block_size, gap_size> coder =

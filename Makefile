@@ -95,6 +95,9 @@ RRR_15_32: rrr_time_and_space.cpp
 H0GAP_15_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1>' -o H0GAP_15_32_1 rrr_time_and_space.cpp $(ISDSL)
 
+H0GAP_15_32_7: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 7>' -o H0GAP_15_32_7 rrr_time_and_space.cpp $(ISDSL)
+
 H0GAP_15_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15>' -o H0GAP_15_32_15 rrr_time_and_space.cpp $(ISDSL)
 
@@ -110,6 +113,9 @@ H0GAP_15_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 H0GAP_24_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1>' -o H0GAP_24_32_1 rrr_time_and_space.cpp $(ISDSL)
 
+H0GAP_24_32_7: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 7>' -o H0GAP_24_32_1 rrr_time_and_space.cpp $(ISDSL)
+
 H0GAP_24_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 15>' -o H0GAP_24_32_15 rrr_time_and_space.cpp $(ISDSL)
 
@@ -121,6 +127,18 @@ H0GAP_24_32_32: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 
 H0GAP_24_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 64>' -o H0GAP_24_32_64 rrr_time_and_space.cpp $(ISDSL)
+
+H0LOO_15_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1, 32, false>' -o H0LOO_15_32_1 rrr_time_and_space.cpp $(ISDSL)
+        
+H0LOO_15_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 15, 32, false>' -o H0LOO_15_32_15 rrr_time_and_space.cpp $(ISDSL)
+
+H0LOO_24_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1, 32, false>' -o H0LOO_24_32_1 rrr_time_and_space.cpp $(ISDSL)
+
+H0LOO_24_32_24: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 24, 32, false>' -o H0LOO_24_32_24 rrr_time_and_space.cpp $(ISDSL)
 
 H0WDBS_15_32: wdbs15.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"wdbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_15_32 rrr_time_and_space.cpp $(ISDSL)
@@ -146,8 +164,8 @@ HYBRRR_256_32: hyb_256.hpp rrr_time_and_space.cpp
 	cp -f hyb_256.hpp $(SDSL_INCLUDE)hyb_vector.hpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB -o HYBRRR_256_32 rrr_time_and_space.cpp $(ISDSL)
 
-bins: H0DBS_15_32 H0DBS_24_32 H0GAP_15_32_1 H0GAP_24_32_1 SDSL_256_32 SDSL_24_32_NOOPT SDSL_15_32_NOOPT SDSL_31_32_NOOPT SDSL_63_32_NOOPT SDSL_64_32_NOOPT H0R_64_32_NOOPT H0I_63_32_NOOPT H0I_64_32_NOOPT SDSL_24_32 SDSL_15_32 SDSL_31_32 SDSL_63_32 SDSL_64_32 H0R_64_32 H0I_63_32 H0I_64_32 RRR_15_32 H0GAP_15_32_15 H0GAP_15_32_24 H0GAP_15_32_32 H0GAP_15_32_64 H0GAP_24_32_15 H0GAP_24_32_24 H0GAP_24_32_32 H0GAP_24_32_64 H0WDBS_15_32 H0WDBS_24_32 HYBSDSL_256_32 HYBIT_256_32 HYBRRR_256_32
+bins: H0GAP_24_32_7 H0GAP_15_32_7 H0LOO_15_32_1 H0LOO_15_32_15 H0LOO_24_32_1 H0LOO_24_32_24 H0DBS_15_32 H0DBS_24_32 H0GAP_15_32_1 H0GAP_24_32_1 SDSL_256_32 SDSL_24_32_NOOPT SDSL_15_32_NOOPT SDSL_31_32_NOOPT SDSL_63_32_NOOPT SDSL_64_32_NOOPT H0R_64_32_NOOPT H0I_63_32_NOOPT H0I_64_32_NOOPT SDSL_24_32 SDSL_15_32 SDSL_31_32 SDSL_63_32 SDSL_64_32 H0R_64_32 H0I_63_32 H0I_64_32 RRR_15_32 H0GAP_15_32_15 H0GAP_15_32_24 H0GAP_15_32_32 H0GAP_15_32_64 H0GAP_24_32_15 H0GAP_24_32_24 H0GAP_24_32_32 H0GAP_24_32_64 H0WDBS_15_32 H0WDBS_24_32 HYBSDSL_256_32 HYBIT_256_32 HYBRRR_256_32
 
 clean:
 	cp -f hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
-	rm -f poke wdb_poke sdsl_comp H0DBS_15_32 H0DBS_24_32 H0GAP_15_32_1 H0GAP_24_32_1 SDSL_256_32 SDSL_24_32_NOOPT SDSL_15_32_NOOPT SDSL_31_32_NOOPT SDSL_63_32_NOOPT SDSL_64_32_NOOPT H0R_64_32_NOOPT H0I_63_32_NOOPT H0I_64_32_NOOPT SDSL_24_32 SDSL_15_32 SDSL_31_32 SDSL_63_32 SDSL_64_32 H0R_64_32 H0I_63_32 H0I_64_32 RRR_15_32 H0GAP_15_32_15 H0GAP_15_32_24 H0GAP_15_32_32 H0GAP_15_32_64 H0GAP_24_32_15 H0GAP_24_32_24 H0GAP_24_32_32 H0GAP_24_32_64 H0WDBS_15_32 H0WDBS_24_32 HYBSDSL_256_32 HYBIT_256_32 HYBRRR_256_32
+	rm -f poke wdb_poke sdsl_comp H0GAP_24_32_7 H0GAP_15_32_7 H0LOO_15_32_1 H0LOO_15_32_15 H0LOO_24_32_1 H0LOO_24_32_24 H0DBS_15_32 H0DBS_24_32 H0GAP_15_32_1 H0GAP_24_32_1 SDSL_256_32 SDSL_24_32_NOOPT SDSL_15_32_NOOPT SDSL_31_32_NOOPT SDSL_63_32_NOOPT SDSL_64_32_NOOPT H0R_64_32_NOOPT H0I_63_32_NOOPT H0I_64_32_NOOPT SDSL_24_32 SDSL_15_32 SDSL_31_32 SDSL_63_32 SDSL_64_32 H0R_64_32 H0I_63_32 H0I_64_32 RRR_15_32 H0GAP_15_32_15 H0GAP_15_32_24 H0GAP_15_32_32 H0GAP_15_32_64 H0GAP_24_32_15 H0GAP_24_32_24 H0GAP_24_32_32 H0GAP_24_32_64 H0WDBS_15_32 H0WDBS_24_32 HYBSDSL_256_32 HYBIT_256_32 HYBRRR_256_32
