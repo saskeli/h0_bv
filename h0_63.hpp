@@ -362,6 +362,10 @@ class h0_bv {
 
     bool access(uint64_t i) const {
         uint64_t block = i / block_width;
+        auto bk = data_typ[block];
+        if (bk == 0 || bk == block_width) {
+            return bk != 0;
+        }
         uint64_t s_block = block / k;
         uint16_t b_offset = block % k;
         i %= block_width;
@@ -370,16 +374,15 @@ class h0_bv {
             std::cerr << block << " block s_offset: " << offset << std::endl;
         }*/
         for (uint64_t j = 0; j < k; ++j) {
+            bk = data_typ[s_block * k + j];
             if (b_offset == j) {
                 break;
             }
-            auto bk = data_typ[s_block * k + j];
             offset += widths[bk];
         }
         /*if (block == 269) {
             std::cerr << block << " block actual offset: " << offset << std::endl;
         }*/
-        auto bk = data_typ[block];
         auto f = data_val.get_int(offset, widths[bk]);
         
         return coder.access(bk, f, i);

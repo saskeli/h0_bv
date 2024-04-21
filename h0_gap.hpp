@@ -203,18 +203,21 @@ class h0_gap {
 
     bool access(uint64_t i) const {
         uint64_t block = i / block_size;
+        auto bk = data_typ[block];
+        if (bk == 0 || bk == block_size) {
+            return bk != 0;
+        }
         uint64_t s_block = block / k;
         uint16_t b_offset = block % k;
         i %= block_size;
         uint64_t offset = meta_point[s_block];
         for (uint64_t j = 0; j < k; ++j) {
+            bk = data_typ[s_block * k + j];
             if (b_offset == j) {
                 break;
             }
-            auto bk = data_typ[s_block * k + j];
             offset += widths[bk];
         }
-        auto bk = data_typ[block];
         auto f = data_val.get_int(offset, widths[bk]);
         return (coder.decode(bk, f) >> i) & 1;
     }
@@ -238,6 +241,9 @@ class h0_gap {
             offset += widths[bk];
         }
         auto bk = data_typ[block];
+        if (bk == 0 || bk == block_size) {
+            return prefix_rank + i * (bk != 0);
+        }
         auto f = data_val.get_int(offset, widths[bk]);
         uint64_t v = coder.decode(bk, f);
         v &= (uint64_t(1) << i) - 1;

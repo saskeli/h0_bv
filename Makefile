@@ -114,7 +114,7 @@ H0GAP_24_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1>' -o H0GAP_24_32_1 rrr_time_and_space.cpp $(ISDSL)
 
 H0GAP_24_32_7: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 7>' -o H0GAP_24_32_1 rrr_time_and_space.cpp $(ISDSL)
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 7>' -o H0GAP_24_32_7 rrr_time_and_space.cpp $(ISDSL)
 
 H0GAP_24_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 15>' -o H0GAP_24_32_15 rrr_time_and_space.cpp $(ISDSL)
@@ -127,6 +127,9 @@ H0GAP_24_32_32: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 
 H0GAP_24_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 64>' -o H0GAP_24_32_64 rrr_time_and_space.cpp $(ISDSL)
+
+H0GAP_31_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=50000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<31, 64>' -o H0GAP_31_32_64 rrr_time_and_space.cpp $(ISDSL)
 
 H0LOO_15_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1, 32, false>' -o H0LOO_15_32_1 rrr_time_and_space.cpp $(ISDSL)
@@ -151,6 +154,9 @@ H0WDBS_24_32: wdbs24.hpp internal.hpp  rrr_time_and_space.cpp
 
 H0DBS_24_32: dbs24.hpp internal.hpp rrr_time_and_space.cpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"dbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0DBS_24_32 rrr_time_and_space.cpp $(ISDSL)
+
+H0WDBS_31_32: wdbs31.hpp internal.hpp  rrr_time_and_space.cpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -DHACK='"wdbs31.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_31_32 rrr_time_and_space.cpp $(ISDSL)
 
 HYBSDSL_256_32: hyb_vanilla.hpp rrr_time_and_space.cpp
 	cp -f hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
