@@ -13,6 +13,18 @@ SDSL_INCLUDE = ~/include/sdsl/
 
 .DEFAULT: H0R_64_32_OP
 
+wdbs24.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 24 > wdbs24.hpp
+
+wdbs15.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 15 > wdbs15.hpp
+
+dbs24.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 24 full > dbs24.hpp
+
+dbs15.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 15 full > dbs15.hpp
+
 %/%.hpp:
 
 sdsl_comp: sdsl_comp.cpp h0_it.hpp internal.hpp h0_63.hpp h0_it.hpp h0_bv.hpp
