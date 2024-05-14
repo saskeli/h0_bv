@@ -17,13 +17,6 @@ defs=(
     H0R_64_32
     H0I_63_32
     H0I_64_32
-    SDSL_15_32_NOOPT
-    SDSL_24_32_NOOPT
-    SDSL_31_32_NOOPT
-    SDSL_63_32_NOOPT
-    H0R_64_32_NOOPT
-    H0I_63_32_NOOPT
-    H0I_64_32_NOOPT
     RRR_15_32
     H0GAP_15_32_1
     H0GAP_15_32_7
@@ -78,6 +71,8 @@ do
             fi
         fi
         echo "      ${TYPE}"
-        ./${TYPE} ${1}${DS} 32 > res/${TYPE}_${DS}.txt
+        ./build/${TYPE} ${1}${DS} 32 > res/${TYPE}_${DS}.txt
     done
 done
+
+make clean

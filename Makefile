@@ -7,183 +7,156 @@ PF = -Ofast -DNDEBUG
 
 ISDSL = -isystem ~/include -L ~/lib -lsdsl
 
+INCLUDE = -I ./include
+
 SDSL_INCLUDE = ~/include/sdsl/
+
+RRR_TIMER = sdsl_hacks/rrr_time_and_space.cpp
+
+CON_FLAGS = -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000
+
+BINARIES = build/H0GAP_24_32_7 build/H0GAP_15_32_7 build/H0LOO_15_32_1 build/H0LOO_15_32_15 \
+build/H0LOO_24_32_1 build/H0LOO_24_32_24 build/H0DBS_15_32 build/H0DBS_24_32 build/H0GAP_15_32_1 \
+build/H0GAP_24_32_1 build/SDSL_256_32 build/SDSL_24_32 build/SDSL_15_32 build/SDSL_31_32 \
+build/SDSL_63_32 build/SDSL_64_32 build/H0R_64_32 build/H0I_63_32 build/H0I_64_32 build/RRR_15_32 \
+build/H0GAP_15_32_15 build/H0GAP_15_32_24 build/H0GAP_15_32_32 build/H0GAP_15_32_64 \
+build/H0GAP_24_32_15 build/H0GAP_24_32_24 build/H0GAP_24_32_32 build/H0GAP_24_32_64 \
+build/H0WDBS_15_32 build/H0WDBS_24_32 build/HYBSDSL_256_32 build/HYBIT_256_32 build/HYBRRR_256_32
 
 .PHONY: clean bins
 
-.DEFAULT: H0R_64_32_OP
+.DEFAULT: bins
 
-wdbs24.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 24 > wdbs24.hpp
+include/wdbs24.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 24 > include/wdbs24.hpp
 
-wdbs15.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 15 > wdbs15.hpp
+include/wdbs15.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 15 > include/wdbs15.hpp
 
-dbs24.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 24 full > dbs24.hpp
+include/dbs24.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 24 full > include/dbs24.hpp
 
-dbs15.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 15 full > dbs15.hpp
+include/dbs15.hpp: weightedDeBrujin.py
+	python weightedDeBrujin.py 15 full > include/dbs15.hpp
 
 %/%.hpp:
 
-sdsl_comp: sdsl_comp.cpp h0_it.hpp internal.hpp h0_63.hpp h0_it.hpp h0_bv.hpp
-	g++ $(CFLAGS) -DNDEBUG -Ofast -fconstexpr-ops-limit=1000000000 -isystem ~/include -L ~/lib -o sdsl_comp sdsl_comp.cpp -lsdsl
+build/SDSL_15_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(INCLUDE) -o build/SDSL_15_32 $(RRR_TIMER) $(ISDSL)
 
-poke: internal.hpp poke.cpp h0_it.hpp h0_63.hpp h0_bv.hpp
-	g++ $(CFLAGS) $(PF) -isystem ~/include -L ~/lib -o poke poke.cpp -lsdsl
+build/SDSL_24_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(INCLUDE) -o build/SDSL_24_32 $(RRR_TIMER) $(ISDSL)
 
-hyb_poke: hyb_poke.cpp hyb_it.hpp hyb_256.hpp hyb_vanilla.hpp
-	g++ $(CFLAGS) $(PF) -o hyb_poke hyb_poke.cpp $(ISDSL)
+build/SDSL_31_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 $(INCLUDE) -o build/SDSL_31_32 $(RRR_TIMER) $(ISDSL)
 
-wdb_poke: h0_gap.hpp wdb_poke.cpp
-	g++ $(CFLAGS) $(PF) -fconstexpr-ops-limit=1000000000 -isystem ~/include -L ~/lib -o wdb_poke wdb_poke.cpp -lsdsl
+build/SDSL_63_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 $(INCLUDE) -o build/SDSL_63_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_15_32: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -o SDSL_15_32 rrr_time_and_space.cpp $(ISDSL)
+build/SDSL_64_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 $(INCLUDE) -o build/SDSL_64_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_24_32: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -o SDSL_24_32 rrr_time_and_space.cpp $(ISDSL)
+build/SDSL_256_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 $(INCLUDE) -o build/SDSL_256_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_31_32: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -o SDSL_31_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0R_64_32: include/h0_bv.hpp include/internal.hpp  $(RRR_TIMER)  | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DHACK='"h0_bv.hpp"' -DCLASSNAME='h0::h0_bv<>' $(INCLUDE) -o build/H0R_64_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_63_32: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 -o SDSL_63_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0I_63_32: include/h0_63.hpp include/internal.hpp  $(RRR_TIMER)  | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 -DHACK='"h0_63.hpp"' -DCLASSNAME='h0::h0_bv<>' $(INCLUDE) -o build/H0I_63_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_64_32: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -o SDSL_64_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0I_64_32: include/h0_it.hpp include/internal.hpp  $(RRR_TIMER)  | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DHACK='"h0_it.hpp"' -DCLASSNAME='h0::h0_bv<>' $(INCLUDE) -o build/H0I_64_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_256_32: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -o SDSL_256_32 rrr_time_and_space.cpp $(ISDSL)
+build/RRR_15_32: $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DRRR15 $(INCLUDE) -o build/RRR_15_32 $(RRR_TIMER) $(ISDSL)
 
-H0R_64_32: h0_bv.hpp internal.hpp  rrr_time_and_space.cpp 
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DHACK='"h0_bv.hpp"' -DCLASSNAME='h0::h0_bv<>' -o H0R_64_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_15_32_1: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1>' $(INCLUDE) -o build/H0GAP_15_32_1 $(RRR_TIMER) $(ISDSL)
 
-H0I_63_32: h0_63.hpp internal.hpp  rrr_time_and_space.cpp 
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 -DHACK='"h0_63.hpp"' -DCLASSNAME='h0::h0_bv<>' -o H0I_63_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_15_32_7: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 7>' $(INCLUDE) -o build/H0GAP_15_32_7 $(RRR_TIMER) $(ISDSL)
 
-H0I_64_32: h0_it.hpp internal.hpp  rrr_time_and_space.cpp 
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DHACK='"h0_it.hpp"' -DCLASSNAME='h0::h0_bv<>' -o H0I_64_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_15_32_15: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15>' $(INCLUDE) -o build/H0GAP_15_32_15 $(RRR_TIMER) $(ISDSL)
 
-SDSL_15_32_NOOPT: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DRRR_NO_OPT -o SDSL_15_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_15_32_24: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 24>' $(INCLUDE) -o build/H0GAP_15_32_24 $(RRR_TIMER) $(ISDSL)
 
-SDSL_24_32_NOOPT: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DRRR_NO_OPT -o SDSL_24_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_15_32_32: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 32>' $(INCLUDE) -o build/H0GAP_15_32_32 $(RRR_TIMER) $(ISDSL)
 
-SDSL_31_32_NOOPT: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -DRRR_NO_OPT -o SDSL_31_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_15_32_64: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 64>' $(INCLUDE) -o build/H0GAP_15_32_64 $(RRR_TIMER) $(ISDSL)
 
-SDSL_63_32_NOOPT: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 -DRRR_NO_OPT -o SDSL_63_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_24_32_1: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1>' $(INCLUDE) -o build/H0GAP_24_32_1 $(RRR_TIMER) $(ISDSL)
 
-SDSL_64_32_NOOPT: rrr_time_and_space.cpp rrr_helper.hpp
-	cp -f rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DRRR_NO_OPT -o SDSL_64_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_24_32_7: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 7>' $(INCLUDE) -o build/H0GAP_24_32_7 $(RRR_TIMER) $(ISDSL)
 
-H0R_64_32_NOOPT: h0_bv.hpp internal.hpp  rrr_time_and_space.cpp 
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DRRR_NO_OPT -DHACK='"h0_bv.hpp"' -DCLASSNAME='h0::h0_bv<>' -o H0R_64_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_24_32_15: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 15>' $(INCLUDE) -o build/H0GAP_24_32_15 $(RRR_TIMER) $(ISDSL)
 
-H0I_63_32_NOOPT: h0_63.hpp internal.hpp  rrr_time_and_space.cpp 
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 -DRRR_NO_OPT -DHACK='"h0_63.hpp"' -DCLASSNAME='h0::h0_bv<>' -o H0I_63_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_24_32_24: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 24>' $(INCLUDE) -o build/H0GAP_24_32_24 $(RRR_TIMER) $(ISDSL)
 
-H0I_64_32_NOOPT: h0_it.hpp internal.hpp  rrr_time_and_space.cpp 
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DRRR_NO_OPT -DHACK='"h0_it.hpp"' -DCLASSNAME='h0::h0_bv<>' -o H0I_64_32_NOOPT rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_24_32_32: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 32>' $(INCLUDE) -o build/H0GAP_24_32_32 $(RRR_TIMER) $(ISDSL)
 
-RRR_15_32: rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DRRR15 -o RRR_15_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0GAP_24_32_64: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 64>' $(INCLUDE) -o build/H0GAP_24_32_64 $(RRR_TIMER) $(ISDSL)
 
-H0GAP_15_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1>' -o H0GAP_15_32_1 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_15_32_7: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 7>' -o H0GAP_15_32_7 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_15_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15>' -o H0GAP_15_32_15 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_15_32_24: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 24>' -o H0GAP_15_32_24 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_15_32_32: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 32>' -o H0GAP_15_32_32 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_15_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 64>' -o H0GAP_15_32_64 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_24_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1>' -o H0GAP_24_32_1 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_24_32_7: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 7>' -o H0GAP_24_32_7 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_24_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 15>' -o H0GAP_24_32_15 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_24_32_24: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 24>' -o H0GAP_24_32_24 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_24_32_32: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 32>' -o H0GAP_24_32_32 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_24_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 64>' -o H0GAP_24_32_64 rrr_time_and_space.cpp $(ISDSL)
-
-H0GAP_31_32_64: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=50000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<31, 64>' -o H0GAP_31_32_64 rrr_time_and_space.cpp $(ISDSL)
-
-H0LOO_15_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1, 32, false>' -o H0LOO_15_32_1 rrr_time_and_space.cpp $(ISDSL)
+build/H0LOO_15_32_1: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 1, 32, false>' $(INCLUDE) -o build/H0LOO_15_32_1 $(RRR_TIMER) $(ISDSL)
         
-H0LOO_15_32_15: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -fconstexpr-ops-limit=1000000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 15, 32, false>' -o H0LOO_15_32_15 rrr_time_and_space.cpp $(ISDSL)
+build/H0LOO_15_32_15: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<15, 15, 32, false>' $(INCLUDE) -o build/H0LOO_15_32_15 $(RRR_TIMER) $(ISDSL)
 
-H0LOO_24_32_1: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1, 32, false>' -o H0LOO_24_32_1 rrr_time_and_space.cpp $(ISDSL)
+build/H0LOO_24_32_1: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 1, 32, false>' $(INCLUDE) -o build/H0LOO_24_32_1 $(RRR_TIMER) $(ISDSL)
 
-H0LOO_24_32_24: h0_gap.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -fconstexpr-ops-limit=1000000000 -fconstexpr-loop-limit=10000000 -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 24, 32, false>' -o H0LOO_24_32_24 rrr_time_and_space.cpp $(ISDSL)
+build/H0LOO_24_32_24: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(CON_FLAGS) -DHACK='"h0_gap.hpp"' -DCLASSNAME='h0::h0_gap<24, 24, 32, false>' $(INCLUDE) -o build/H0LOO_24_32_24 $(RRR_TIMER) $(ISDSL)
 
-H0WDBS_15_32: wdbs15.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"wdbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_15_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0WDBS_15_32: include/wdbs15.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"wdbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' $(INCLUDE) -o build/H0WDBS_15_32 $(RRR_TIMER) $(ISDSL)
 
-H0DBS_15_32: dbs15.hpp internal.hpp rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"dbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0DBS_15_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0DBS_15_32: include/dbs15.hpp include/internal.hpp $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DHACK='"dbs15.hpp"' -DCLASSNAME='h0::h0_wdb<>' $(INCLUDE) -o build/H0DBS_15_32 $(RRR_TIMER) $(ISDSL)
 
-H0WDBS_24_32: wdbs24.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"wdbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_24_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0WDBS_24_32: include/wdbs24.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"wdbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' $(INCLUDE) -o build/H0WDBS_24_32 $(RRR_TIMER) $(ISDSL)
 
-H0DBS_24_32: dbs24.hpp internal.hpp rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"dbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0DBS_24_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0DBS_24_32: include/dbs24.hpp include/internal.hpp $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 -DHACK='"dbs24.hpp"' -DCLASSNAME='h0::h0_wdb<>' $(INCLUDE) -o build/H0DBS_24_32 $(RRR_TIMER) $(ISDSL)
 
-H0WDBS_31_32: wdbs31.hpp internal.hpp  rrr_time_and_space.cpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -DHACK='"wdbs31.hpp"' -DCLASSNAME='h0::h0_wdb<>' -o H0WDBS_31_32 rrr_time_and_space.cpp $(ISDSL)
+build/H0WDBS_31_32: include/wdbs31.hpp include/internal.hpp  $(RRR_TIMER) | build
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 -DHACK='"wdbs31.hpp"' -DCLASSNAME='h0::h0_wdb<>' $(INCLUDE) -o build/H0WDBS_31_32 $(RRR_TIMER) $(ISDSL)
 
-HYBSDSL_256_32: hyb_vanilla.hpp rrr_time_and_space.cpp
-	cp -f hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB -o HYBSDSL_256_32 rrr_time_and_space.cpp $(ISDSL)
+build/HYBSDSL_256_32: sdsl_hacks/hyb_vanilla.hpp $(RRR_TIMER) | build
+	cp -f sdsl_hacks/hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB $(INCLUDE) -o build/HYBSDSL_256_32 $(RRR_TIMER) $(ISDSL)
 
-HYBIT_256_32: hyb_it.hpp rrr_time_and_space.cpp
-	cp -f hyb_it.hpp $(SDSL_INCLUDE)hyb_vector.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB -o HYBIT_256_32 rrr_time_and_space.cpp $(ISDSL)
+build/HYBIT_256_32: sdsl_hacks/hyb_it.hpp $(RRR_TIMER) | build
+	cp -f sdsl_hacks/hyb_it.hpp $(SDSL_INCLUDE)hyb_vector.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB $(INCLUDE) -o build/HYBIT_256_32 $(RRR_TIMER) $(ISDSL)
 
-HYBRRR_256_32: hyb_256.hpp rrr_time_and_space.cpp
-	cp -f hyb_256.hpp $(SDSL_INCLUDE)hyb_vector.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB -o HYBRRR_256_32 rrr_time_and_space.cpp $(ISDSL)
+build/HYBRRR_256_32: sdsl_hacks/hyb_256.hpp $(RRR_TIMER) | build
+	cp -f sdsl_hacks/hyb_256.hpp $(SDSL_INCLUDE)hyb_vector.hpp
+	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB $(INCLUDE) -o build/HYBRRR_256_32 $(RRR_TIMER) $(ISDSL)
 
-bins: H0GAP_24_32_7 H0GAP_15_32_7 H0LOO_15_32_1 H0LOO_15_32_15 H0LOO_24_32_1 H0LOO_24_32_24 H0DBS_15_32 H0DBS_24_32 H0GAP_15_32_1 H0GAP_24_32_1 SDSL_256_32 SDSL_24_32_NOOPT SDSL_15_32_NOOPT SDSL_31_32_NOOPT SDSL_63_32_NOOPT SDSL_64_32_NOOPT H0R_64_32_NOOPT H0I_63_32_NOOPT H0I_64_32_NOOPT SDSL_24_32 SDSL_15_32 SDSL_31_32 SDSL_63_32 SDSL_64_32 H0R_64_32 H0I_63_32 H0I_64_32 RRR_15_32 H0GAP_15_32_15 H0GAP_15_32_24 H0GAP_15_32_32 H0GAP_15_32_64 H0GAP_24_32_15 H0GAP_24_32_24 H0GAP_24_32_32 H0GAP_24_32_64 H0WDBS_15_32 H0WDBS_24_32 HYBSDSL_256_32 HYBIT_256_32 HYBRRR_256_32
+build: 
+	mkdir build
+
+bins: $(BINARIES)
 
 clean:
-	cp -f hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
-	rm -f poke wdb_poke sdsl_comp H0GAP_24_32_7 H0GAP_15_32_7 H0LOO_15_32_1 H0LOO_15_32_15 H0LOO_24_32_1 H0LOO_24_32_24 H0DBS_15_32 H0DBS_24_32 H0GAP_15_32_1 H0GAP_24_32_1 SDSL_256_32 SDSL_24_32_NOOPT SDSL_15_32_NOOPT SDSL_31_32_NOOPT SDSL_63_32_NOOPT SDSL_64_32_NOOPT H0R_64_32_NOOPT H0I_63_32_NOOPT H0I_64_32_NOOPT SDSL_24_32 SDSL_15_32 SDSL_31_32 SDSL_63_32 SDSL_64_32 H0R_64_32 H0I_63_32 H0I_64_32 RRR_15_32 H0GAP_15_32_15 H0GAP_15_32_24 H0GAP_15_32_32 H0GAP_15_32_64 H0GAP_24_32_15 H0GAP_24_32_24 H0GAP_24_32_32 H0GAP_24_32_64 H0WDBS_15_32 H0WDBS_24_32 HYBSDSL_256_32 HYBIT_256_32 HYBRRR_256_32
+	cp -f sdsl_hacks/hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
+	rm -rf build

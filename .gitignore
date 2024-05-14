@@ -21,6 +21,7 @@ wdb_poke
 sdsl_comp
 poke
 binoms
+build/
 
 #debuggin stuff
 vgcore*
@@ -39,3 +40,4 @@ wdbs*.hpp
 
 # results
 res/
+*.pdf
