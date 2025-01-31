@@ -5,13 +5,15 @@ CFLAGS = -std=c++2b -Wall -Wextra -Wshadow -pedantic -march=native -DCACHE_LINE=
 
 PF = -Ofast -DNDEBUG
 
-ISDSL = -isystem ~/include -L ~/lib -lsdsl
+ISDSL = -isystem sdsl-lite/include -L sdsl-lite/lib -lsdsl
 
 INCLUDE = -I ./include
 
-SDSL_INCLUDE = ~/include/sdsl/
+SDSL_INCLUDE = sdsl-lite/include/sdsl/
 
-RRR_TIMER = sdsl_hacks/rrr_time_and_space.cpp
+SDSL_A = sdsl-lite/lib/libsdsl.a
+
+RRR_TIMER = sdsl_hacks/rrr_time_and_space.cpp sdsl-lite/lib/libsdsl.a
 
 CON_FLAGS = -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000
 
@@ -41,28 +43,29 @@ include/dbs15.hpp: weightedDeBrujin.py
 
 %/%.hpp:
 
-build/SDSL_15_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
-	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
-	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 $(INCLUDE) -o build/SDSL_15_32 $(RRR_TIMER) $(ISDSL)
-
-build/SDSL_24_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
-	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+build/SDSL_24_32: $(RRR_TIMER) sdsl_hacks/rrr_vector.hpp sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)
+	cp -f sdsl_hacks/rrr_vector.hpp $(SDSL_INCLUDE)
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=24 $(INCLUDE) -o build/SDSL_24_32 $(RRR_TIMER) $(ISDSL)
 
-build/SDSL_31_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
-	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+build/SDSL_31_32: $(RRR_TIMER) sdsl_hacks/rrr_vector.hpp sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)
+	cp -f sdsl_hacks/rrr_vector.hpp $(SDSL_INCLUDE)
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=31 $(INCLUDE) -o build/SDSL_31_32 $(RRR_TIMER) $(ISDSL)
 
-build/SDSL_63_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
-	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+build/SDSL_63_32: $(RRR_TIMER) sdsl_hacks/rrr_vector.hpp sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)
+	cp -f sdsl_hacks/rrr_vector.hpp $(SDSL_INCLUDE)
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=63 $(INCLUDE) -o build/SDSL_63_32 $(RRR_TIMER) $(ISDSL)
 
-build/SDSL_64_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
-	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+build/SDSL_64_32: $(RRR_TIMER) sdsl_hacks/rrr_vector.hpp sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)
+	cp -f sdsl_hacks/rrr_vector.hpp $(SDSL_INCLUDE)
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 $(INCLUDE) -o build/SDSL_64_32 $(RRR_TIMER) $(ISDSL)
 
-build/SDSL_256_32: $(RRR_TIMER) sdsl_hacks/rrr_helper.hpp | build
-	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)rrr_helper.hpp
+build/SDSL_256_32: $(RRR_TIMER) sdsl_hacks/rrr_vector.hpp sdsl_hacks/rrr_helper.hpp | build
+	cp -f sdsl_hacks/rrr_helper.hpp $(SDSL_INCLUDE)
+	cp -f sdsl_hacks/rrr_vector.hpp $(SDSL_INCLUDE)
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 $(INCLUDE) -o build/SDSL_256_32 $(RRR_TIMER) $(ISDSL)
 
 build/H0R_64_32: include/h0_bv.hpp include/internal.hpp  $(RRR_TIMER)  | build
@@ -74,7 +77,8 @@ build/H0I_63_32: include/h0_63.hpp include/internal.hpp  $(RRR_TIMER)  | build
 build/H0I_64_32: include/h0_it.hpp include/internal.hpp  $(RRR_TIMER)  | build
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=64 -DHACK='"h0_it.hpp"' -DCLASSNAME='h0::h0_bv<>' $(INCLUDE) -o build/H0I_64_32 $(RRR_TIMER) $(ISDSL)
 
-build/RRR_15_32: $(RRR_TIMER) | build
+build/RRR_15_32: $(RRR_TIMER) sdsl_hacks/rrr_vector_15.hpp | build
+	cp -f sdsl_hacks/rrr_vector_15.hpp $(SDSL_INCLUDE)
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=15 -DRRR15 $(INCLUDE) -o build/RRR_15_32 $(RRR_TIMER) $(ISDSL)
 
 build/H0GAP_15_32_1: include/h0_gap.hpp include/internal.hpp  $(RRR_TIMER) | build
@@ -151,6 +155,9 @@ build/HYBIT_256_32: sdsl_hacks/hyb_it.hpp $(RRR_TIMER) | build
 build/HYBRRR_256_32: sdsl_hacks/hyb_256.hpp $(RRR_TIMER) | build
 	cp -f sdsl_hacks/hyb_256.hpp $(SDSL_INCLUDE)hyb_vector.hpp
 	g++ $(CFLAGS) $(PF) -DBLOCK_SIZE=256 -DHYB $(INCLUDE) -o build/HYBRRR_256_32 $(RRR_TIMER) $(ISDSL)
+
+$(SDSL_A):
+	(cd sdsl-lite && cmake CMakelists.txt && make)
 
 build: 
 	mkdir build

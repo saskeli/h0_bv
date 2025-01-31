@@ -9,7 +9,6 @@ lscpu | grep 'Model name'
 uname -r
 
 defs=(
-    SDSL_15_32
     SDSL_24_32
     SDSL_31_32
     SDSL_63_32
@@ -44,10 +43,19 @@ defs=(
 )
 
 data=(
-    rnd-50.16MB
     WT-DNA-1GB
     WT-WEB-1GB
     bv-dump.bin
+    RND-1.bin
+    RND-2.bin
+    RND-3.bin
+    RND-4.bin
+    RND-5.bin
+    RND-6.bin
+    RND-7.bin
+    RND-8.bin
+    RND-9.bin
+    RND-10.bin
 )
 
 mkdir -p res

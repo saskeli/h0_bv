@@ -101,7 +101,8 @@ def cpp_header(n):
 namespace h0 {
 namespace internal {
 
-class wdbs {""")
+class wdbs {
+  public:""")
     max_pop = (n + 1) // 2
     arr_size = ceil((sum(comb(n, i) + 1 for i in range(1, max_pop + 1)) + n - 1) / 8)
     
@@ -162,7 +163,6 @@ class wdbs {""")
 
     print(f"    static const constexpr std::array<{i_typ}, {len(offsets)}> offs = {'{'}{', '.join(str(v) for v in offsets)}{'}'};")
 
-    print("   public:")
     print(f"    static constexpr uint{d_typ}_t decode(uint16_t C, {i_typ} off) {'{'}")
     print(f"        const constexpr uint{d_typ}_t mask = (uint{d_typ}_t(1) << {n}) - 1;")
     print(f"        bool flip = C > {ceil(n / 2)};")
@@ -347,6 +347,27 @@ class h0_wdb {'{'}
         return sizeof(h0_wdb) + sdsl::size_in_bytes(meta_point) + sdsl::size_in_bytes(meta_rank) + 
                                sdsl::size_in_bytes(data_typ) + sdsl::size_in_bytes(data_val);
     {'}'}
+
+    uint64_t C_bytes() const {'{'}
+        return sdsl::size_in_bytes(data_typ);
+    {'}'}
+
+    uint64_t F_bytes() const {'{'}
+        return sdsl::size_in_bytes(data_val);
+    {'}'}
+
+    uint64_t partial_sums() const {'{'}
+        return sdsl::size_in_bytes(meta_point) + sdsl::size_in_bytes(meta_rank);
+    {'}'}
+
+    uint64_t lookup_tables() const {'{'}
+        uint64_t ret = sizeof(internal::wdbs::data) + sizeof(internal::wdbs::offs) + sizeof(widths);
+        return ret; 
+    {'}'}
+
+    uint64_t object_bytes() const {'{'}
+        return sizeof(*this);
+    {'}'}
 {'}'};
 
 {'}'}  // namespace h0
@@ -364,7 +385,8 @@ def full_header(n):
 namespace h0 {
 namespace internal {
 
-class wdbs {""")
+class wdbs {
+  public:""")
     arr_size = ceil((sum(comb(n, i) + 1 for i in range(1, n)) + n) / 8)
     
     print(f"    static const constexpr std::array<uint8_t, {arr_size}> data = {'{'}", end="")
@@ -427,7 +449,6 @@ class wdbs {""")
 
     print(f"    static const constexpr std::array<{i_typ}, {len(offsets)}> offs = {'{'}{', '.join(str(v) for v in offsets)}{'}'};")
 
-    print("   public:")
     print(f"    static constexpr uint{d_typ}_t decode(uint16_t C, {i_typ} off) {'{'}")
     print(f"        const constexpr uint{d_typ}_t mask = (uint{d_typ}_t(1) << {n}) - 1;")
     print("        off += offs[C];")
@@ -536,7 +557,7 @@ class h0_wdb {'{'}
         i %= {n};
         uint64_t offset = meta_point[s_block];
         for (uint64_t j = 0; j < k; ++j) {'{'}
-            auto bk = data_typ[s_block * k + j];
+            bk = data_typ[s_block * k + j];
             if (b_offset == j) {'{'}
                 break;
             {'}'}
@@ -608,6 +629,27 @@ class h0_wdb {'{'}
     uint64_t bytes_size() const {'{'}
         return sizeof(h0_wdb) + sdsl::size_in_bytes(meta_point) + sdsl::size_in_bytes(meta_rank) + 
                                sdsl::size_in_bytes(data_typ) + sdsl::size_in_bytes(data_val);
+    {'}'}
+
+    uint64_t C_bytes() const {'{'}
+        return sdsl::size_in_bytes(data_typ);
+    {'}'}
+
+    uint64_t F_bytes() const {'{'}
+        return sdsl::size_in_bytes(data_val);
+    {'}'}
+
+    uint64_t partial_sums() const {'{'}
+        return sdsl::size_in_bytes(meta_point) + sdsl::size_in_bytes(meta_rank);
+    {'}'}
+
+    uint64_t lookup_tables() const {'{'}
+        uint64_t ret = sizeof(internal::wdbs::data) + sizeof(internal::wdbs::offs) + sizeof(widths);
+        return ret; 
+    {'}'}
+
+    uint64_t object_bytes() const {'{'}
+        return sizeof(*this);
     {'}'}
 {'}'};
 

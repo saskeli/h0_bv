@@ -1,12 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <sdsl/bit_vectors.hpp>
+#include "sdsl/bit_vectors.hpp"
 #include "counters.hpp"
 #ifdef HACK
     #include HACK
 #elif defined RRR15
-    #include <sdsl/rrr_vector_15.hpp>
+    #include "sdsl/rrr_vector_15.hpp"
 #endif
 
 using namespace std;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 #endif
     bit_vector bv;
     if (load_from_file(bv, argv[1])) {
-        cout << "# plain_size = " << size_in_bytes(bv) << endl;
+        cout << "# plain size bytes: " << size_in_bytes(bv) << endl;
         uint16_t k = atoi(argv[2]);
         auto start = timer::now();
         rrr_vec_type rrr_vector(bv);
@@ -118,21 +118,28 @@ int main(int argc, char* argv[])
         rrr_rank_type   rrr_rank(&rrr_vector);
 #endif
         auto stop = timer::now();
-        cout << "# construct_time = " << duration_cast<milliseconds>(stop-start).count() << endl;
+        cout << "# construct time (ms): " << duration_cast<milliseconds>(stop-start).count() << endl;
 #ifdef HACK
         uint64_t args = rrr_vector.rank(rrr_vector.size());
 #else
         rrr_vec_type::size_type args = rrr_rank(rrr_vector.size());
 #endif
-        cout << "# rrr_vector.size() = " << rrr_vector.size() << endl;
-        cout << "# args = " << args << endl;
-        cout << "# file_name = "  << argv[1] << endl;
-        cout << "# block_size = " << BLOCK_SIZE << endl;
-        cout << "# sample_rate = "<< k << endl;
+        cout << "# rrr_vector elsms: " << rrr_vector.size() << endl;
+        cout << "# one bits: " << args << endl;
+        cout << "# file name: "  << argv[1] << endl;
+        cout << "# block size: " << BLOCK_SIZE << endl;
+        cout << "# rank sample rate: "<< k << endl;
 #ifdef HACK
-        cout << "# rrr_size = "   << rrr_vector.bytes_size() << endl;
+        cout << "# rrr size bytes: "   << rrr_vector.bytes_size() << endl;
 #else
-        cout << "# rrr_size = "   << size_in_bytes(rrr_vector) << endl;
+        cout << "# rrr size bytes: "   << size_in_bytes(rrr_vector) << endl;
+#endif
+#ifndef HYB
+        cout << "#  C array bytes: "   << rrr_vector.C_bytes() << endl;
+        cout << "#  F array bytes: "   << rrr_vector.F_bytes() << endl;
+        cout << "#   partial sums: "   << rrr_vector.partial_sums() << endl;
+        cout << "#   lookup bytes: "   << rrr_vector.lookup_tables() << endl;
+        cout << "#   object bytes: "   << rrr_vector.object_bytes() << endl;
 #endif
         const uint64_t reps = 10000000;
         uint64_t mask = 0;
@@ -143,8 +150,8 @@ int main(int argc, char* argv[])
         check = test_random_access(rrr_vector, rands, mask, reps);
         stop = timer::now();
         count.accumulate(0);
-        cout << "# access_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
-        cout << "# access_check = " << check << endl;
+        cout << "# access time ns/query: " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
+        cout << "# access checksum: " << check << endl;
         auto c = count.get(0);
         cout << "Cycles:       " << c[0] << " (" << double(c[0]) / reps << ")" << "\n"
              << "Instructions: " << c[1] << " (" << double(c[1]) / reps << ")" << "\n"
@@ -159,8 +166,8 @@ int main(int argc, char* argv[])
         check = test_inv_random_access(rrr_rank, rands, mask, reps);
 #endif
         stop = timer::now();
-        cout << "# rank_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
-        cout << "# rank_check = " << check << endl;
+        cout << "# rank time ns/query: " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
+        cout << "# rank checksum: " << check << endl;
         rands = util::rnd_positions<int_vector<64>>(20, mask, args, 17);
         for (uint64_t i=0; i<rands.size(); ++i) rands[i] = rands[i]+1;
         stop = timer::now();
@@ -172,7 +179,7 @@ int main(int argc, char* argv[])
 #endif
 #endif
         stop = timer::now();
-        cout << "# select_time = " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
-        cout << "# select_check = " << check << endl;
+        cout << "# select time ns/query: " << duration_cast<nanoseconds>(stop-start).count()/(double)reps << endl;
+        cout << "# select checksum: " << check << endl;
     }
 }
