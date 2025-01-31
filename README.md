@@ -26,10 +26,9 @@ Besides this there is debugging code, that is probably best left untouched until
 
 ## Running
 
-https://github.com/simongog/sdsl-lite should be installed on the system used for testing. The default install location is set up in the `Makefile`. 
-If SDSL is not installed in the default location, the paths used in `ISDSL` and `SDSL_INCLUDE` should be updated.
+Clone the repo recursively to ensure you have sdsl available.
 
-With sdsl installed, tests can be run by calling `tester.sh <path/to/data/files>` in the repository root.
+Tests can be run by calling `tester.sh <path/to/data/files>` in the repository root.
 
 Results will be stored in the `res` folder.
 

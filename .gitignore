@@ -22,6 +22,8 @@ sdsl_comp
 poke
 binoms
 build/
+utils/gen_bv
+utils/bv_stat
 
 #debuggin stuff
 vgcore*
@@ -37,6 +39,7 @@ __pycache__/
 
 # generated headers
 wdbs*.hpp
+dbs*.hpp
 
 # results
 res/
