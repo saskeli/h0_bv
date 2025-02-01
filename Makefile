@@ -25,7 +25,7 @@ build/H0GAP_15_32_15 build/H0GAP_15_32_24 build/H0GAP_15_32_32 build/H0GAP_15_32
 build/H0GAP_24_32_15 build/H0GAP_24_32_24 build/H0GAP_24_32_32 build/H0GAP_24_32_64 \
 build/H0WDBS_15_32 build/H0WDBS_24_32 build/HYBSDSL_256_32 build/HYBIT_256_32 build/HYBRRR_256_32
 
-.PHONY: clean bins
+.PHONY: clean bins $(SDSL_INCLUDE)rrr_helper.hpp $(SDSL_INCLUDE)rrr_vector.hpp $(SDSL_INCLUDE)rrr_vector_15.hpp
 
 .DEFAULT: bins
 
@@ -170,4 +170,5 @@ bins: $(BINARIES)
 
 clean:
 	cp -f sdsl_hacks/hyb_vanilla.hpp $(SDSL_INCLUDE)hyb_vector.hpp
+	rm -f include/dbs15.hpp include/dbs24.hpp include/wdbs15.hpp include/wdbs24.hpp
 	rm -rf build
