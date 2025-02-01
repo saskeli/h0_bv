@@ -19,7 +19,7 @@ CON_FLAGS = -fconstexpr-ops-limit=5000000000 -fconstexpr-loop-limit=10000000
 
 BINARIES = build/H0GAP_24_32_7 build/H0GAP_15_32_7 build/H0LOO_15_32_1 build/H0LOO_15_32_15 \
 build/H0LOO_24_32_1 build/H0LOO_24_32_24 build/H0DBS_15_32 build/H0DBS_24_32 build/H0GAP_15_32_1 \
-build/H0GAP_24_32_1 build/SDSL_256_32 build/SDSL_24_32 build/SDSL_15_32 build/SDSL_31_32 \
+build/H0GAP_24_32_1 build/SDSL_256_32 build/SDSL_24_32 build/SDSL_31_32 \
 build/SDSL_63_32 build/SDSL_64_32 build/H0R_64_32 build/H0I_63_32 build/H0I_64_32 build/RRR_15_32 \
 build/H0GAP_15_32_15 build/H0GAP_15_32_24 build/H0GAP_15_32_32 build/H0GAP_15_32_64 \
 build/H0GAP_24_32_15 build/H0GAP_24_32_24 build/H0GAP_24_32_32 build/H0GAP_24_32_64 \
