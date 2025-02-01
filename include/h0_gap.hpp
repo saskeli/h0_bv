@@ -305,7 +305,7 @@ class h0_gap {
   }
 
   uint64_t lookup_tables() const {
-    uint64_t ret = sizeof(decltype(coder)::bins) + sizeof(widths);
+    uint64_t ret = sizeof(decltype(coder)::bins) + sizeof(decltype(coder)::offsets) + sizeof(decltype(coder)::gap_blocks);
     return ret;
   }
 
