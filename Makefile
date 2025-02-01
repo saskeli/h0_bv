@@ -30,16 +30,16 @@ build/H0WDBS_15_32 build/H0WDBS_24_32 build/HYBSDSL_256_32 build/HYBIT_256_32 bu
 .DEFAULT: bins
 
 include/wdbs24.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 24 > include/wdbs24.hpp
+	python3 weightedDeBrujin.py 24 > include/wdbs24.hpp
 
 include/wdbs15.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 15 > include/wdbs15.hpp
+	python3 weightedDeBrujin.py 15 > include/wdbs15.hpp
 
 include/dbs24.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 24 full > include/dbs24.hpp
+	python3 weightedDeBrujin.py 24 full > include/dbs24.hpp
 
 include/dbs15.hpp: weightedDeBrujin.py
-	python weightedDeBrujin.py 15 full > include/dbs15.hpp
+	python3 weightedDeBrujin.py 15 full > include/dbs15.hpp
 
 %/%.hpp:
 
