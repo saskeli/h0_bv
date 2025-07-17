@@ -33,7 +33,7 @@ int main(int argc, char const *argv[]) {
         double res = p * std::log2(1 / p) + (1 - p) * std::log2(1 / (1 - p));
         std::cout << "H0 entropy: " << res << std::endl;
         std::cout << "H0 bits: " << std::ceil(res * size) << std::endl;
-        std::array a = {15, 16, 24, 31, 32, 63, 64};
+        std::array a = {15, 24, 32, 64};
         for (uint64_t bs : a) {
             std::vector<uint64_t> bins = {1};
             for (uint64_t i = 1; i <= bs; ++i) {
